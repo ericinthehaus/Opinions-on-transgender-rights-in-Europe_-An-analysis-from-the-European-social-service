@@ -1,0 +1,18 @@
+Giorgio
+Aggregate variables by country: 
+Sum for each country: people who agree (and don’t) with globalisation, mean salary, 
+What is the relationship between these new variables. 
+
+Eric 
+Without aggregating: does the country variable affect how many people support transgender people or are the other variables (responses in the questionnaire) more correlated ? 
+Looking for relationships between the same answers to questions in one country and another one.  
+
+Alicia
+??? 
+NA 
+
+Next steps: 
+
+Read summary and questionnaire to get familiar with the variables 
+Play around with the data in R 
+
