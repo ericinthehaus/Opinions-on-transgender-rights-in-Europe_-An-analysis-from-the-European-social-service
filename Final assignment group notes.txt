@@ -16,3 +16,19 @@ Next steps:
 Read summary and questionnaire to get familiar with the variables 
 Play around with the data in R 
 
+* Select the relevant variables in the questionaire dataset 
+    - keep "objective" variables like occupation, city type, etc..
+        -> keep age, occupation, nationality, education, income, 
+    - also keep some other relevant "subjective" questions related to topic of transgender rights 
+        -> find which ones are correlated and get rid of ones that are correlated. 
+       Giorgio -> highlight the variables in the questionaire that we will keep 
+
+* Research on which countries have legal rights for transgender people 
+    Alicia -> look at legal rights in European countries for same-sex marriage, political history, 
+    Eric -> look up economic indices including inequality, edu, crime rates, gender equality index, marriage rates, for eu countries 
+    
+* Impute missing data and tidy data 
+    - Come up with strategy for handling missing data 
+
+
+
