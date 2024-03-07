@@ -1,0 +1,29 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+---
+
+## Packages
+
+```{r}
+library(tidyverse)
+library(haven)
+library(readxl)
+```
+
+```{r}
+
+data <- read_dta("Data/ZA7575.dta")
+
+```
+
+## The homophobia scale in 2019
+
+```{r}
+
+ilga <- read_xlsx("ilga.xlsx", sheet = 2)
+
+ilga <- ilga |> 
+  filter(CONTINENT == "EUROPE")
+```
