@@ -27,3 +27,11 @@ ilga <- read_xlsx("ilga.xlsx", sheet = 2)
 ilga <- ilga |> 
   filter(CONTINENT == "EUROPE")
 ```
+
+## Gini
+
+```{r}
+
+gini <- read_csv("eu_gini_coef.csv")
+
+```
