@@ -12,22 +12,56 @@ library(haven)
 library(readxl)
 ```
 
+# Loading databases
+
 ```{r}
 
+# Main database
 data <- read_dta("ZA7575.dta")
 
-```
-
-## The homophobia scale in 2019
-
-```{r}
-
+# LGBTphobia database
 ilga <- read_xlsx("ilga.xlsx", sheet = 2)
-
 ilga <- ilga |> 
   filter(CONTINENT == "EUROPE")
 
-selected_data <- data %>%
+# GINI index database
+gini <- read_csv("eu_gini_coef.csv")
+
+```
+
+### Merging together Countries database
+
+```{r}
+
+names <- data.frame(
+  COUNTRY = c(
+    "Belgium", "Greece", "Lithuania", "Portugal", "Bulgaria", "Spain", "Luxembourg", "Romania", "Czechia", "France", 
+    "Hungary", "Slovenia", "Denmark", "Croatia", "Malta", "Slovakia", "Germany", "Italy", "Netherlands", "Finland", "Estonia", "Cyprus", "Austria", "Sweden", "Ireland", "Latvia", "Poland",  "Iceland", "Norway", "Liechtenstein", "Switzerland",
+  "Bosnia and Herzegovina", "Montenegro", "Moldova", "North Macedonia", "Georgia", "Albania", "Serbia", "Türkiye", 
+    "Ukraine","Kosovo"
+  ),
+  geo = c(
+    "BE", "EL", "LT", "PT", "BG", "ES", "LU", "RO", "CZ", "FR", "HU", "SI", "DK", "HR", "MT", "SK", "DE", "IT", "NL", "FI", "EE", "CY", "AT", "SE", "IE", "LV", "PL", "IS", "NO", "LI", "CH", "BA", "ME", "MD", "MK", "GE", "AL", "RS", "TR", "UA","XK"
+  )
+)
+
+gini <- gini |> 
+  select(geo, TIME_PERIOD, OBS_VALUE, OBS_FLAG) |> 
+    filter(TIME_PERIOD == "2019") |> 
+  left_join(names, by = "geo")
+
+
+countries <- gini |> 
+  left_join(ilga, by = "COUNTRY") |> 
+  select(-TIME_PERIOD, CONTINENT) |> 
+  filter(!is.na(CONTINENT))
+```
+
+## Selecting variables in the main dataset
+
+```{r}
+
+selected_data <- data |> 
   select(
     uniqid, 
     isocntry, # nationality keep 
@@ -59,11 +93,11 @@ selected_data <- data %>%
     qc9_1:qc9_11,
     qc10,
     qc11_1:qc1_10,
-    qc12_1:qc12_15r,
-    qc13_1:qc13_15r,
+    qc12_1r, qc12_2r, qc12_3r, qc12_4r, qc12_5r, qc12_6r, qc12_7r, qc12_8r, qc12_9r, qc12_10r, qc12_11r, qc12_12r, qc12_13r, qc12_14r, qc12_15r,
+    qc13_1r, qc13_2r, qc13_3r, qc13_4r, qc13_5r, qc13_6r, qc13_7r, qc13_8r, qc13_9r, qc13_10r, qc13_11r, qc13_12r, qc13_13r, qc13_14r, qc13_15r,
     qc15_1:qc15_3,
     qc17_1:qc17_7,
-    qc18_1:qc18_3r,
+    qc18_1r, qc18_2r, qc18_3r,
     qc19, # TARGET VARIABLE 
     qc20,
     d1, # keep, scale from 0-10, remove 11, 12
@@ -79,60 +113,19 @@ selected_data <- data %>%
     d72_1, d72_2, # keep. does my voice count
     p3r, # paradata
     p5, # paradata
-    p4 # paradata 
-  )
+    p4 # paradata
+) 
 ```
 
-## Gini
+### Feature engineering
 
 ```{r}
 
-gini <- read_csv("eu_gini_coef.csv")
-
-```
-
-## Gini
-
-```{r}
-
-gini <- read_csv("eu_gini_coef.csv")
+selected_data <- selected_data |> 
+  rename(COUNTRY = isocntry) |> 
+  left_join(names, by = "COUNTRY")
 
 
-```
-
-### Merging together countries database
-
-```{r}
-
-names <- data.frame(
-  COUNTRY = c(
-    "Belgium", "Greece", "Lithuania", "Portugal", "Bulgaria", "Spain", "Luxembourg", "Romania", "Czechia", "France", 
-    "Hungary", "Slovenia", "Denmark", "Croatia", "Malta", "Slovakia", "Germany", "Italy", "Netherlands", "Finland", "Estonia", "Cyprus", "Austria", "Sweden", "Ireland", "Latvia", "Poland",  "Iceland", "Norway", "Liechtenstein", "Switzerland",
-  "Bosnia and Herzegovina", "Montenegro", "Moldova", "North Macedonia", "Georgia", "Albania", "Serbia", "Türkiye", 
-    "Ukraine","Kosovo"
-  ),
-  geo = c(
-    "BE", "EL", "LT", "PT", "BG", "ES", "LU", "RO", "CZ", "FR", "HU", "SI", "DK", "HR", "MT", "SK", "DE", "IT", "NL", "FI", "EE", "CY", "AT", "SE", "IE", "LV", "PL", "IS", "NO", "LI", "CH", "BA", "ME", "MD", "MK", "GE", "AL", "RS", "TR", "UA","XK"
-  )
-)
-
-gini <- gini |> 
-  select(geo, TIME_PERIOD, OBS_VALUE, OBS_FLAG) |> 
-    filter(TIME_PERIOD == "2019") |> 
-  left_join(names, by = "geo")
-
-
-countries <- gini |> 
-  left_join(ilga, by = "COUNTRY") |> 
-  select(-TIME_PERIOD, CONTINENT)
-```
-
-Select variables
-
-```{r}
-
-data <- data |> 
-  select(uniqid, d11)
 
 
 ```
