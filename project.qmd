@@ -18,6 +18,7 @@ library(readxl)
 
 # Main database
 data <- read_dta("ZA7575.dta")
+data <- read_dta("Data/ZA7575.dta")
 
 # LGBTphobia database
 ilga <- read_xlsx("ilga.xlsx", sheet = 2)
@@ -68,7 +69,7 @@ selected_data <- data |>
     d11, # age  
     d70, # life satisfaction 
     polintr, # political interest 
-    qa1, # globalization 
+    qa1, # globalization scale 1-4, convert 5 to NA 
     # qa5a,
     # qa7,
     # qa8,
@@ -78,8 +79,8 @@ selected_data <- data |>
     # qa13,
     # qa14,
     # qa17,
-    sd1_1, sd1_2,
-    sd2_1, sd2_2, sd2_3, sd2_4, sd2_5, sd2_6, sd2_7, sd2_8,
+    sd1_7, # do you know someone who is transgender. 
+    # sd2_1, sd2_2, sd2_3, sd2_4, sd2_5, sd2_6, sd2_7, sd2_8,
     sd3,
     qc1_4, 
     qc2_1:qc2_14, # recode to 1 for discrimination == yes
@@ -108,7 +109,7 @@ selected_data <- data |>
     d25, # keep type of city 
     # d40a, d40b, d40c, d43a, d43b,
     d60, # financial keep 
-    d62_1:d62_4, # keep internet. calculate average 
+    d62_1,  # keep internet at home. calculate average 
     d63, # class keep. as factor 
     d72_1, d72_2, # keep. does my voice count
     p3r, # paradata
@@ -125,7 +126,62 @@ selected_data <- selected_data |>
   rename(COUNTRY = isocntry) |> 
   left_join(names, by = "COUNTRY")
 
+```
 
+## Merging together countries database
+
+```{r}
+
+names <- data.frame(
+  COUNTRY = c(
+    "Belgium", "Greece", "Lithuania", "Portugal", "Bulgaria", "Spain", "Luxembourg", "Romania", "Czechia", "France", 
+    "Hungary", "Slovenia", "Denmark", "Croatia", "Malta", "Slovakia", "Germany", "Italy", "Netherlands", "Finland", "Estonia", "Cyprus", "Austria", "Sweden", "Ireland", "Latvia", "Poland",  "Iceland", "Norway", "Liechtenstein", "Switzerland",
+  "Bosnia and Herzegovina", "Montenegro", "Moldova", "North Macedonia", "Georgia", "Albania", "Serbia", "Türkiye", 
+    "Ukraine","Kosovo"
+  ),
+  geo = c(
+    "BE", "EL", "LT", "PT", "BG", "ES", "LU", "RO", "CZ", "FR", "HU", "SI", "DK", "HR", "MT", "SK", "DE", "IT", "NL", "FI", "EE", "CY", "AT", "SE", "IE", "LV", "PL", "IS", "NO", "LI", "CH", "BA", "ME", "MD", "MK", "GE", "AL", "RS", "TR", "UA","XK"
+  )
+)
+
+gini <- gini |> 
+  select(geo, TIME_PERIOD, OBS_VALUE, OBS_FLAG) |> 
+    filter(TIME_PERIOD == "2019") |> 
+  left_join(names, by = "geo")
+
+
+countries <- gini |> 
+  left_join(ilga, by = "COUNTRY") |> 
+  filter(!is.na(CONTINENT)) |> 
+  select(-c(TIME_PERIOD, CONTINENT) )
+
+selected_data |> distinct(isocntry)
+```
+
+## Select variables
+
+```{r}
+recoded_data <- selected_data |> 
+  mutate(
+    qa1 = replace(qa1, qa1==5, NA),
+    qc2_sum = qc2_1 + qc2_2 + qc2_3 + qc2_4 +
+              qc2_5 + qc2_6 + qc2_7 + qc2_8 +
+              qc2_9 + qc2_10 + qc2_11 + qc2_12 +
+              qc2_13 + qc2_14,
+    qc2_recode = case_when(
+      qc2_sum > 0 ~ 1,
+      qc2_15 == 1 ~ 0,
+      qc2_16 == 1 ~ NA),
+    # qc6_recode  = mean(qc6_1, qc6_2),
+    d15a = factor(d15a, ordered = FALSE ),
+    d1 = replace(d1, d1 %in% c(11,12), NA),
+    d63 = replace(d63, d63 > 5 , NA),
+    d72_1 = replace(d72_1, d72_1 > 4, NA ),
+    d72_2 = replace(d72_2, d72_2 > 4, NA ),
+    ) |> 
+  select(
+    -c(qc2_1:qc2_16)
+  )
 
 
 ```
