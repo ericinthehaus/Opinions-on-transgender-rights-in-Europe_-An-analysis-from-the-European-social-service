@@ -14,7 +14,7 @@ library(readxl)
 
 ```{r}
 
-data <- read_dta("Data/ZA7575.dta")
+data <- read_dta("ZA7575.dta")
 
 ```
 
@@ -26,4 +26,59 @@ ilga <- read_xlsx("ilga.xlsx", sheet = 2)
 
 ilga <- ilga |> 
   filter(CONTINENT == "EUROPE")
+
+selected_data <- data %>%
+  select(
+    uniqid, 
+    isocntry, # nationality keep 
+    d11, # age  
+    d70, # life satisfaction 
+    polintr, # political interest 
+    qa1, # globalization 
+    # qa5a,
+    # qa7,
+    # qa8,
+    # qa9,
+    # qa11,
+    # qa12,
+    # qa13,
+    # qa14,
+    # qa17,
+    sd1_1, sd1_2,
+    sd2_1, sd2_2, sd2_3, sd2_4, sd2_5, sd2_6, sd2_7, sd2_8,
+    sd3,
+    qc1_4, 
+    qc2_1:qc2_14, # recode to 1 for discrimination == yes
+      qc2_15, # recode to 0. discriminatino == no
+      qc2_16, # recode to NA, impute missing data.  DONT KNOW
+    # qc3,
+    # qc4,
+    qc6_1:qc6_11, # calculate average in new variable. not including values of 11 or 12
+    qc7,
+    qc8,
+    qc9_1:qc9_11,
+    qc10,
+    qc11_1:qc1_10,
+    qc12_1:qc12_15r,
+    qc13_1:qc13_15r,
+    qc15_1:qc15_3,
+    qc17_1:qc17_7,
+    qc18_1:qc18_3r,
+    qc19, # TARGET VARIABLE 
+    qc20,
+    d1, # keep, scale from 0-10, remove 11, 12
+    # d7,
+    d10, # gender keep 
+    d8, # keep education years 
+    d15a, # convert to factor. occupation 
+    d25, # keep type of city 
+    # d40a, d40b, d40c, d43a, d43b,
+    d60, # financial keep 
+    d62_1:d62_4, # keep internet. calculate average 
+    d63, # class keep. as factor 
+    d72_1, d72_2, # keep. does my voice count
+    p3r, # paradata
+    p5, # paradata
+    p4 # paradata 
+  )
 ```
