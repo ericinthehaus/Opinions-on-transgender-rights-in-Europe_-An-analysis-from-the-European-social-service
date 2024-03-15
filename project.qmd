@@ -128,36 +128,6 @@ selected_data <- selected_data |>
 
 ```
 
-## Merging together countries database
-
-```{r}
-
-names <- data.frame(
-  COUNTRY = c(
-    "Belgium", "Greece", "Lithuania", "Portugal", "Bulgaria", "Spain", "Luxembourg", "Romania", "Czechia", "France", 
-    "Hungary", "Slovenia", "Denmark", "Croatia", "Malta", "Slovakia", "Germany", "Italy", "Netherlands", "Finland", "Estonia", "Cyprus", "Austria", "Sweden", "Ireland", "Latvia", "Poland",  "Iceland", "Norway", "Liechtenstein", "Switzerland",
-  "Bosnia and Herzegovina", "Montenegro", "Moldova", "North Macedonia", "Georgia", "Albania", "Serbia", "Türkiye", 
-    "Ukraine","Kosovo"
-  ),
-  geo = c(
-    "BE", "EL", "LT", "PT", "BG", "ES", "LU", "RO", "CZ", "FR", "HU", "SI", "DK", "HR", "MT", "SK", "DE", "IT", "NL", "FI", "EE", "CY", "AT", "SE", "IE", "LV", "PL", "IS", "NO", "LI", "CH", "BA", "ME", "MD", "MK", "GE", "AL", "RS", "TR", "UA","XK"
-  )
-)
-
-gini <- gini |> 
-  select(geo, TIME_PERIOD, OBS_VALUE, OBS_FLAG) |> 
-    filter(TIME_PERIOD == "2019") |> 
-  left_join(names, by = "geo")
-
-
-countries <- gini |> 
-  left_join(ilga, by = "COUNTRY") |> 
-  filter(!is.na(CONTINENT)) |> 
-  select(-c(TIME_PERIOD, CONTINENT) )
-
-
-```
-
 ## Select variables
 
 ```{r}
