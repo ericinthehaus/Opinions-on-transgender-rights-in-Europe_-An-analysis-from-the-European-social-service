@@ -1,0 +1,113 @@
+uniqid
+
+isocntry - country with 2 letter code 
+
+d11 -- exact age
+
+d70 - life satisfaction 
+
+polintr
+
+* PER LE SEGUENTI DOMANDE POTREMMO FARE UNA MEDIA IN MODO TALE DA CREARE UN'UNICA COLONNA IDENTIFICATIVA DELL'IDEOLOGIA"
+
+qa1 (?) GLOBALIZATION
+
+qa5a (?) GLOBALIZATION
+
+qa7 (?) OPINION ABOUT EU
+
+qa8 (?) PROTECTIONISM
+
+qa9 (?) OPINION ABOUT EU
+
+qa11 (?) LIBERISM
+
+qa12 (?) PROTECTIONSIM
+
+qa13 (?) PROTECTIONISM
+
+qa14 (?) COMMERCIAL BEHAVIOURS
+
+qa17 (?) TRUST IN EU
+(Finita la pagina 101-150)
+
+SD1 (n) We can do a mean for answers 1 and 2
+
+For SD2 we can take in account only the column "None" and we can consider the other columns with the same meaning, namely "minority", so we can represent it with a binary variable
+
+SD3
+
+Maybe we can mantain QC1_4
+
+For QC2 we can do the same of SD2, so we can assign 1 if the answer is No ("15), and 0 if teh respondent felt discriminated against in some way
+
+QC3 (?) IDK if it's relevant
+
+For QC4 we might see the most common response for each country and take it as relevant data
+
+For answers to question QC6 we can compute a mean (the more the better)
+
+QC7 
+
+QC8 (is related only to ROMA people, I think is not relevant)
+
+For QC9 we can compute a men (the lesser the better)
+
+QC10 (Trust in istitutions, if I go to an istitutions, then I felt protected
+
+Q11 (mean)
+
+For Q12 we can compute a mean (the more the better) or we can take in account onlu the Q12_10 (I think is better) and Q12_11, Q12_12
+
+We can do the same for qc13
+
+QC15 (compute a mean [the lesser the better])
+
+QC17 (mean)
+
+QC18 (mean)
+
+QC19
+
+QC20
+
+d1
+
+d7 (we hav to think how to involve this into the analysis)
+
+d10 
+
+d8
+
+d15a
+
+d25
+
+d40 (a, b and c)
+
+d43 (a and b) this could be useful to verify if there is a correlation
+
+d60
+
+d62 (Use of internet, we can compute a mean)
+
+d63
+
+d72 (democracy participation feeling) --> opls
+
+Following answers are related to paradata
+
+p3(r)
+
+p5
+
+from 510 to the end there are no information in the questionnarie
+
+p4
+
+
+
+
+
+
+In many questions could be the social desirability bias
