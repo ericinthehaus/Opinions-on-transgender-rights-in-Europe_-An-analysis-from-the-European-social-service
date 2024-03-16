@@ -157,7 +157,8 @@ recoded_data <- selected_data |>
     d15a = factor(d15a, ordered = FALSE ),
     d1 = replace(d1, d1 %in% c(11,12), NA),
     d63 = replace(d63, d63 > 5 , NA),
-    d70 = factor(replace(d70, d70 == 5, NA), ordered = T), 
+    d70 = factor(replace(d70, d70 == 5, NA), ordered = T,
+                 labels = c("Very", "Somewhat", "Not very", "Not at all")), 
     polintr = factor(replace(polintr, polintr == 4, NA), ordered = T), 
     d72_1 = replace(d72_1, d72_1 > 4, NA ),
     d72_2 = replace(d72_2, d72_2 > 4, NA ),
@@ -166,7 +167,7 @@ recoded_data <- selected_data |>
     -c(qc2_1:qc2_16)
   )
 
-summary(recoded_data)
+summary(recoded_data$d70)
 
 ```
 
@@ -186,5 +187,5 @@ exp(model3$coefficients)
 ```
 
 ```{r}
-summary(recoded_data$qc19) 
+summary(model1) 
 ```
