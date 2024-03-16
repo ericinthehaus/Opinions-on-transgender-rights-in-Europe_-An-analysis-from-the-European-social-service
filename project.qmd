@@ -157,8 +157,10 @@ recoded_data <- selected_data |>
     d15a = factor(d15a, ordered = FALSE ),
     d1 = replace(d1, d1 %in% c(11,12), NA),
     d63 = replace(d63, d63 > 5 , NA),
-    d70 = factor(replace(d70, d70 == 5, NA), ordered = T), 
-    polintr = factor(replace(polintr, polintr == 4, NA), ordered = T), 
+    d70 = factor(replace(d70, d70 == 5, NA), ordered = F,
+          labels = c("Very", "Somewhat", "Not very", "Not at all")), 
+    polintr = factor(replace(polintr, polintr == 4, NA), ordered = F,
+          labels = c("frequently", "occasionally", "never")), 
     d72_1 = replace(d72_1, d72_1 > 4, NA ),
     d72_2 = replace(d72_2, d72_2 > 4, NA ),
     ) |> 
@@ -166,25 +168,71 @@ recoded_data <- selected_data |>
     -c(qc2_1:qc2_16)
   )
 
-summary(recoded_data)
+summary(recoded_data$d70)
 
 ```
 
 ## Preliminary models
 
+### Split training/testing data
+
+```{r splitting}
+library(caret)
+# not sure if we need to split the data for surveys but anyway i will put it here just in case 
+in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
+training.data <- recoded_data[in.train, ]
+testing.data <- recoded_data[-in.train, ]
+```
+
+### Three binomial logistic models
+
+According to all 3 models below, **life satisfaction** has a strong effect on an individual's opinion about transgender rights. The model results show that respondents who said that they are "not very" and "not at all" satisfied with their life are much more likely to answer "No" to the question about giving transgender people the right to change their civil documents. The coefficients show that both negative responses have a similar effect on the odds that they will answer Yes/No. Respondents who answered "somewhat satisfied" are also more likely to answer "No" but not by much.
+
+Other predictors **Age**, **Political Interest**, and **Country** also show a strong effect on the outcome.
+
 ```{r models}
 
 model1 <- glm(qc19 ~ d11 + d70*polintr,
-             data = recoded_data, family = binomial)
+             data = training.data, family = binomial)
 model2 <- glm(qc19 ~ d11 + d70 + polintr, 
-             data = recoded_data, family = binomial)
-model3 <- glm(qc19 ~ COUNTRY,
-              data = recoded_data, family = binomial)
+             data = training.data, family = binomial)
+model3 <- glm(qc19 ~ COUNTRY + d70 -1,
+              data = training.data, family = binomial)
 
 stargazer::stargazer(model1, model2, model3, type = "text")
 exp(model3$coefficients)
 ```
 
 ```{r}
-summary(recoded_data$qc19) 
+new.data <- data.frame(d11 = c(20, 30, 40),
+                       d70 = c("Very", "Very", "Very"),
+                       polintr = c("frequently", "frequently", "frequently"))
+predict.glm(model1, newdata = new.data, type = "response")
+```
+
+### Test data
+
+With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because there are lots of false positives. Most of the real "No"s are predicted as "Yes."
+
+```{r}
+threshold = 0.5 # set the threshold here 
+probabilities <- predict(model3, newdata = testing.data, type = "response")
+predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
+
+confusionMatrix(predictions, testing.data$qc19)
+```
+
+```{r}
+roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
+sens <- roc$sensitivities #include sensitivities in test data
+spec <- roc$specificities
+
+plot(roc, col='green', print.thres=TRUE)
+roc$levels
+
+threshold = .602 # set the threshold here 
+probabilities <- predict(model3, newdata = testing.data, type = "response")
+predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
+
+confusionMatrix(predictions, testing.data$qc19)
 ```
