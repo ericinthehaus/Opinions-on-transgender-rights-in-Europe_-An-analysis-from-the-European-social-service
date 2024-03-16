@@ -174,31 +174,61 @@ summary(recoded_data$d70)
 
 ## Preliminary models
 
-### Split training/testing data 
+### Split training/testing data
 
-```{r split=TRUE}
+```{r splitting}
+library(caret)
 # not sure if we need to split the data for surveys but anyway i will put it here just in case 
-
-
+in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
+training.data <- recoded_data[in.train, ]
+testing.data <- recoded_data[-in.train, ]
 ```
+
+### Three binomial logistic models 
 
 ```{r models}
 
 model1 <- glm(qc19 ~ d11 + d70*polintr,
-             data = recoded_data, family = binomial)
+             data = training.data, family = binomial)
 model2 <- glm(qc19 ~ d11 + d70 + polintr, 
-             data = recoded_data, family = binomial)
+             data = training.data, family = binomial)
 model3 <- glm(qc19 ~ COUNTRY,
-              data = recoded_data, family = binomial)
+              data = training.data, family = binomial)
 
 stargazer::stargazer(model1, model2, model3, type = "text")
 exp(model3$coefficients)
 ```
 
 ```{r}
-summary(model1) 
 new.data <- data.frame(d11 = c(20, 30, 40),
                        d70 = c("Very", "Very", "Very"),
                        polintr = c("frequently", "frequently", "frequently"))
 predict.glm(model1, newdata = new.data, type = "response")
+```
+
+### Test data
+
+With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because there are lots of false positives. Most of the real "No"s are predicted as "Yes."
+
+```{r}
+threshold = 0.5 # set the threshold here 
+probabilities <- predict(model1, newdata = testing.data, type = "response")
+predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
+
+confusionMatrix(predictions, testing.data$qc19)
+```
+
+```{r}
+roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
+sens <- roc$sensitivities #include sensitivities in test data
+spec <- roc$specificities
+
+plot(roc, col='green', print.thres=TRUE)
+roc$levels
+
+threshold = .604 # set the threshold here 
+probabilities <- predict(model1, newdata = testing.data, type = "response")
+predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
+
+confusionMatrix(predictions, testing.data$qc19)
 ```
