@@ -184,7 +184,11 @@ training.data <- recoded_data[in.train, ]
 testing.data <- recoded_data[-in.train, ]
 ```
 
-### Three binomial logistic models 
+### Three binomial logistic models
+
+According to all 3 models below, **life satisfaction** has a strong effect on an individual's opinion about transgender rights. The model results show that respondents who said that they are "not very" and "not at all" satisfied with their life are much more likely to answer "No" to the question about giving transgender people the right to change their civil documents. The coefficients show that both negative responses have a similar effect on the odds that they will answer Yes/No. Respondents who answered "somewhat satisfied" are also more likely to answer "No" but not by much.
+
+Other predictors **Age**, **Political Interest**, and **Country** also show a strong effect on the outcome.
 
 ```{r models}
 
@@ -192,7 +196,7 @@ model1 <- glm(qc19 ~ d11 + d70*polintr,
              data = training.data, family = binomial)
 model2 <- glm(qc19 ~ d11 + d70 + polintr, 
              data = training.data, family = binomial)
-model3 <- glm(qc19 ~ COUNTRY,
+model3 <- glm(qc19 ~ COUNTRY + d70 -1,
               data = training.data, family = binomial)
 
 stargazer::stargazer(model1, model2, model3, type = "text")
@@ -212,7 +216,7 @@ With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because t
 
 ```{r}
 threshold = 0.5 # set the threshold here 
-probabilities <- predict(model1, newdata = testing.data, type = "response")
+probabilities <- predict(model3, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 
 confusionMatrix(predictions, testing.data$qc19)
@@ -226,8 +230,8 @@ spec <- roc$specificities
 plot(roc, col='green', print.thres=TRUE)
 roc$levels
 
-threshold = .604 # set the threshold here 
-probabilities <- predict(model1, newdata = testing.data, type = "response")
+threshold = .602 # set the threshold here 
+probabilities <- predict(model3, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
 confusionMatrix(predictions, testing.data$qc19)
