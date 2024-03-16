@@ -184,3 +184,7 @@ model3 <- glm(qc19 ~ COUNTRY,
 stargazer::stargazer(model1, model2, model3, type = "text")
 exp(model3$coefficients)
 ```
+
+```{r}
+summary(recoded_data$qc19) 
+```
