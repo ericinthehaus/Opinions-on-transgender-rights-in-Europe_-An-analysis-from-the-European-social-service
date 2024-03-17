@@ -139,7 +139,7 @@ Regarding missing data, we drop out some variables for having too many NAs and i
 
 imputed_data <- selected_data |> 
     mutate(d70 = ifelse(d70 == 5, NA, as.numeric(d70))) |> 
-    mutate(qa1 = ifelse(qa1 == 5, NA, as.numeric(qa1))) |> 
+    mutate(qa1 = ifelse(qa1 > 5, NA, as.numeric(qa1))) |> 
     mutate(polintr = ifelse(polintr == 4, NA, as.numeric(polintr))) |> 
     mutate(d63 = ifelse(d63 > 5, NA, as.numeric(d63))) |> 
     mutate(d72_1 = ifelse(d72_1 %in% c(5, 6), NA, as.numeric(d72_1))) |> 
@@ -194,7 +194,8 @@ recoded_data <- selected_data |>
       labels = c("No", "Yes")
       ), 
     
-    qa1 = replace(qa1, qa1==5, NA),
+    qa1 = factor(qa1, 
+                 labels = c("A lot", "Somewhat", "Not really", "Not at all")),
     qc2_sum = qc2_1 + qc2_2 + qc2_3 + qc2_4 +
               qc2_5 + qc2_6 + qc2_7 + qc2_8 +
               qc2_9 + qc2_10 + qc2_11 + qc2_12 +
@@ -221,7 +222,7 @@ recoded_data <- selected_data |>
   select(
     -c(qc2_1:qc2_16))
 
-summary(recoded_data$d70)
+summary(recoded_data$qa1)
 
 ```
 
@@ -322,7 +323,7 @@ model2 <- glm(qc19 ~ d11 + d70 + polintr,
              data = recoded_data, family = binomial)
 model3 <- glm(qc19 ~ geo + d70 -1,
               data = recoded_data, family = binomial)
-model4 <- glm(qc19 ~ OBS_VALUE + d70 + age_group + polintr + qa1,
+model4 <- glm(qc19 ~ OBS_VALUE + d70 + age_group + polintr + as.factor(qa1),
               data = recoded_data, family = binomial)
 
 stargazer::stargazer(model1, model2, model3, model4, type = "text")
@@ -349,20 +350,54 @@ confusionMatrix(predictions, recoded_data$qc19)
 ```
 
 ```{r eval=FALSE}
-roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
+roc <- pROC::roc(recoded_data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
 
 plot(roc, col='green', print.thres=TRUE)
 roc$levels
 
-threshold = .602 # set the threshold here 
-probabilities <- predict(model3, newdata = testing.data, type = "response")
+threshold = .577 # set the threshold here 
+probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response")
 predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
-confusionMatrix(predictions, testing.data$qc19)
+confusionMatrix(predictions, recoded_data$qc19)
 ```
 
 ```{r}
+library(lme4)
 
+mixed_model1 <- glmer(qc19 ~ d11 + d70*polintr + (1|geo),
+             data = recoded_data, family = binomial,
+             )
+mixed_model2 <- glmer(qc19 ~ d11 + d70 + polintr+ (1|geo), 
+             data = recoded_data, family = binomial)
+mixed_model3 <- glmer(qc19 ~ d70 + (1|geo),
+              data = recoded_data, family = binomial)
+mixed_model4 <- glmer(qc19 ~ OBS_VALUE + d70 + (1|age_group) +
+                        polintr + qa1 + d10,
+              data = recoded_data, family = binomial,
+              )
+
+stargazer::stargazer(mixed_model4, type = "text")
+summary(mixed_model4)
+```
+
+### Visualizing the mixed models 
+
+```{r}
+library(sjPlot)
+sjPlot::plot_model(model4, type = "pred", terms = "age_group",) +
+  theme_classic()
+sjPlot::plot_model(mixed_model4, type = "pred", terms =  "d10") +
+  labs(x = "gender")
+```
+
+```{r}
+library(caret)
+threshold = 0.6 # set the threshold here 
+probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response")
+predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
+
+confusionMatrix(predictions, recoded_data$qc19)
 ```
