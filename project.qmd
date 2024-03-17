@@ -140,16 +140,22 @@ imputed_data <- selected_data |>
     mutate(d70 = ifelse(d70 == 5, NA, as.numeric(d70))) |> 
     mutate(qa1 = ifelse(qa1 == 5, NA, as.numeric(qa1))) |> 
     mutate(polintr = ifelse(polintr == 4, NA, as.numeric(polintr))) |> 
-    mutate(d63 = ifelse(d63 == 5, NA, as.numeric(d63))) |> 
-    mutate(d72_1 = ifelse(d72_1 > 4, NA, as.numeric(d72_1))) |> 
-    mutate(d72_2 = ifelse(d72_2 > 4, NA, as.numeric(d72_2)))
+    mutate(d63 = ifelse(d63 > 5, NA, as.numeric(d63))) |> 
+    mutate(d72_1 = ifelse(d72_1 %in% c(5, 6), NA, as.numeric(d72_1))) |> 
+    mutate(d72_2 = ifelse(d72_2 %in% c(5,6), NA, as.numeric(d72_2))) |> 
+    mutate(sd3 = ifelse(sd3 %in% c(14,15,16), NA, as.numeric(sd3))) |> 
+    mutate(qa1 = ifelse(qa1 %in% 5, NA, as.numeric(qa1))) |> 
+    mutate(sd1_7 = ifelse(sd1_7 %in% c(3,4), NA, as.numeric(sd1_7))) |> 
+    mutate(d25 = ifelse(d25 > 3, NA, as.numeric(d25))) |> 
+    mutate(d8 = ifelse(d8 %in% c(98,99, 97), NA, as.numeric(d8))) 
 
-imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2")
+imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8")
 init = mice(imputed_data)
 
 meth = init$method
 
-meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2")] <- "rf"
+set.seed(123)
+meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8")] <- "rf"
 
 imputed_rf = mice(imputed_data, methid=meth, iterations = 10)
 
@@ -157,7 +163,7 @@ imputed_rf = mice(imputed_data, methid=meth, iterations = 10)
   imputed_data <- cbind(imputed_data, complete(imputed_rf))
 
   imputed_data <- imputed_data |> 
-    select(-1, -2, -3, -4, -5, -6)
+    select(-1, -2, -3, -4, -5, -6, -7, -8, -9, -10)
   
 
 # Replace non imputed columns with imputed ones
@@ -202,10 +208,17 @@ recoded_data <- selected_data |>
     d70 = factor(d70, ordered = F,
           labels = c("Very", "Somewhat", "Not very", "Not at all")), 
     polintr = factor(polintr, ordered = F,
-          labels = c("frequently", "occasionally", "never"))) |> 
+          labels = c("frequently", "occasionally", "never")),
+    d63 = factor(d63, ordered = FALSE, labels = c("Working class", "Lower middle class", "Middle class", "Upper middle class", "Higher class")),
+    d72_1 = factor(d72_1, ordered = FALSE, labels= c("Totally agree", "Agree", "Disagree", "Totally disagree")),
+    d72_2 = factor(d72_1, ordered = FALSE, labels= c("Totally agree", "Agree", "Disagree", "Totally disagree")),
+    sd3 = factor(sd3, ordered = FALSE, labels= c("Catholic", "Orthodox Christian", "Prostetant", "Other Christian", "Jewish", "Muslim - Shia", "Muslin - Sunni", "Other Muslim", "Sikh", "Buddhist", "Hindu", "Atheist", "Agnostic")),
+    sd1_7 = factor(sd1_7, ordered = F, labels = c("Yes", "No")),
+    d25 = factor(d25, ordered = F, labels = c("Rural area", "Small/medium town", "Large town")),
+    age_group = cut(d11, breaks = seq(0, 100, by = 10), include.lowest = TRUE),
+    school_group = cut(d8, breaks = seq(1, 50, by = 5), include.lowest = TRUE)) |> 
   select(
-    -c(qc2_1:qc2_16)
-  )
+    -c(qc2_1:qc2_16))
 
 summary(recoded_data$d70)
 
@@ -222,33 +235,27 @@ prop.table(table(recoded_data$qc19, useNA = "ifany")) * 100
 
 Now, we will visualize some plots crossing the answers in QC19 to other variables.
 
--   d11 - Age. In younger ages more people tend to answer 'yes', which means, more people are in favor of allowing trans people to change their documents. As the age increases, the 'yes' answer is less likely, but still over 50%. The number of NAs also increase with age, with a peak between 60 and 70 years old.
+-   age_group- Age. In younger ages more people tend to answer 'yes', which means, more people are in favor of allowing trans people to change their documents. As the age increases, the 'yes' answer is less likely, but still over 50%. The number of NAs also increase with age, with a peak between 60 and 70 years old.
 
--   sd3 - RECODE FIRST to remove NA and imppute. Religion. La mayoría de personas de la muestra se consideran católicas. De éstas, un 56% está a favor frente un 43% en contra. La identidad en la cual hay más personas en contra, con un 57%, es orthodox christian. In the other hand, there are more individuals who agree who are Agnostic and atheists.
+-   sd3 - Religion. La mayoría de personas de la muestra se consideran católicas. De éstas, un 56% está a favor frente un 43% en contra. La identidad en la cual hay más personas en contra, con un 57%, es orthodox christian. In the other hand, there are more individuals who agree who are Agnostic and atheists (Sikh too but there are very few cases in the sample, it's not representative).
 
--   polintr - Political interest. More people who never get involved in political topics answered 'don't know' proportionally than in the rest of categories. Thy're also the individuals with a higher rate of 'no' answers. There are more people who answer 'no' and have a frequent interest in politics compared to people who have an ocasional interest.
-
--   qa1 - RECODE FIRST to remove NA and imppute. Opinion on international trade. People who consider they benefit a lot from international trade allowed by the EU tend to be more positive regarding our target variable. However, as the perception of trade decreases, so does the amount of people who are in favor, as well as people who don't answer.
-
--   sd1_7 - RECODE FIRST to remove NA and imppute Friend/acquaintance who is trans. A 85.7% of europeans don't have a trans friend or aqcuaintance. However, from the people who don't know a trans person, 80% of them are in favor of trans people changing their document, a much higher percentage than the 57% between the people who do know a trans person.
+-   sd1_7 - Friend/acquaintance who is trans. A 89.8% of europeans don't have a trans friend or aqcuaintance. However, from the people who don't know a trans person, 80% of them are in favor of trans people changing their document, a much higher percentage than the 57% between the people who do know a trans person.
 
 -   qc2_recode - Suffered discrimination. Most people haven't suffered discrimination. The amount of people who is for and against the target question is very similar in both groups.
 
--   d25 - Type of city. RECODE FIRST to remove NA and imppute
+-   polintr - Political interest. More people who never get involved in political topics answered 'don't know' proportionally than in the rest of categories. Thy're also the individuals with a higher rate of 'no' answers. There are more people who answer 'no' and have a frequent interest in politics compared to people who have an ocasional interest.
+
+-   qa1 - Opinion on international trade. People who consider they benefit a lot from international trade allowed by the EU tend to be more positive regarding our target variable. However, as the perception of trade decreases, so does the amount of people who are in favor, as well as people who don't answer.
+
+-   d25 - Type of city. There is more people against trans people changing their documents in rural areas, as well as in large towns compared to medium-sized cities.
 
 -   d10 - Gender. More women than men answered 'yes' in the target variable.
 
--   d8 - Education years. RECODE FIRST to remove NA and imppute
+-   school_group- Age when stopped education. This variable can be colineal with age. People who abandoned education very young are less suportive. The older the age, the more the support.
+
+-   d63 - Subjective social class. A 27% of people define themselves as working class, more than lower middle class. The most common one is middle class. Only 0,6% of people consider themselves higher class. The least supportive class is working class, and as the class level increases so does the support.
 
 ```{r, fig.height=6, fig.width=12}
-
-# d11 - Age
-recoded_data$age_group <- cut(recoded_data$d11, breaks = seq(0, 100, by = 10), include.lowest = TRUE)
-
-ggplot(recoded_data, aes(x = age_group, fill = qc19)) +
-  geom_bar(position = "stack") +
-    labs(x = "Edad", y = "Conteo", fill = "Variable qc19") +
-  theme_minimal()
 
 # sd3 - Religion
 prop.table(table(recoded_data$sd3, recoded_data$qc19), margin = 1) * 100
@@ -260,7 +267,14 @@ prop.table(table(recoded_data$sd1_7, recoded_data$qc19), margin = 1) * 100
 # qc2_recode  - Experienced discrimination
 prop.table(table(recoded_data$qc2_recode, recoded_data$qc19), margin = 1) * 100
 
-variables <- c("polintr", "qa1", "d25", "d10", "d8")
+# school_group  - Age finished education
+prop.table(table(recoded_data$school_group, recoded_data$qc19), margin = 1) * 100
+
+# d63  - Subjective social class
+prop.table(table(recoded_data$d63))
+prop.table(table(recoded_data$d63, recoded_data$qc19), margin = 1) * 100
+
+variables <- c("age_group", "polintr", "qa1", "d25", "d10")
 
 colors <- c("cyan", "magenta", "yellow", "green", "orange", "purple")
 
