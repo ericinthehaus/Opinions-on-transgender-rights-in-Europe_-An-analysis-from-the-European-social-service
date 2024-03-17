@@ -11,6 +11,8 @@ library(tidyverse)
 library(haven)
 library(readxl)
 library(mice)
+library(ggplot2)
+library(gridExtra)
 ```
 
 # Loading databases
@@ -62,7 +64,6 @@ countries <- gini |>
 ## Selecting variables in the main dataset
 
 ```{r}
-
 selected_data <- data |> 
   select(
     uniqid, 
@@ -212,14 +213,72 @@ summary(recoded_data$d70)
 
 ## Descriptive
 
+Most people answer "yes" to our target question (52.7%), but there are also a significant amount of 'no' (35%) and 'dont know' answers (11.9%).
+
 ```{r}
+prop.table(table(recoded_data$qc19, useNA = "ifany")) * 100
 
+```
 
-ggplot(recoded_data) +
-  geom_bar(aes(x = d70), fill = "blue") +
-  labs(x = "Variable d70", y = "Frecuencia", title = "Gráfico de barras de la variable d70")
+Now, we will visualize some plots crossing the answers in QC19 to other variables.
+
+-   d11 - Age. In younger ages more people tend to answer 'yes', which means, more people are in favor of allowing trans people to change their documents. As the age increases, the 'yes' answer is less likely, but still over 50%. The number of NAs also increase with age, with a peak between 60 and 70 years old.
+
+-   sd3 - RECODE FIRST to remove NA and imppute. Religion. La mayoría de personas de la muestra se consideran católicas. De éstas, un 56% está a favor frente un 43% en contra. La identidad en la cual hay más personas en contra, con un 57%, es orthodox christian. In the other hand, there are more individuals who agree who are Agnostic and atheists.
+
+-   polintr - Political interest. More people who never get involved in political topics answered 'don't know' proportionally than in the rest of categories. Thy're also the individuals with a higher rate of 'no' answers. There are more people who answer 'no' and have a frequent interest in politics compared to people who have an ocasional interest.
+
+-   qa1 - RECODE FIRST to remove NA and imppute. Opinion on international trade. People who consider they benefit a lot from international trade allowed by the EU tend to be more positive regarding our target variable. However, as the perception of trade decreases, so does the amount of people who are in favor, as well as people who don't answer.
+
+-   sd1_7 - RECODE FIRST to remove NA and imppute Friend/acquaintance who is trans. A 85.7% of europeans don't have a trans friend or aqcuaintance. However, from the people who don't know a trans person, 80% of them are in favor of trans people changing their document, a much higher percentage than the 57% between the people who do know a trans person.
+
+-   qc2_recode - Suffered discrimination. Most people haven't suffered discrimination. The amount of people who is for and against the target question is very similar in both groups.
+
+-   d25 - Type of city. RECODE FIRST to remove NA and imppute
+
+-   d10 - Gender. More women than men answered 'yes' in the target variable.
+
+-   d8 - Education years. RECODE FIRST to remove NA and imppute
+
+```{r, fig.height=6, fig.width=12}
+
+# d11 - Age
+recoded_data$age_group <- cut(recoded_data$d11, breaks = seq(0, 100, by = 10), include.lowest = TRUE)
+
+ggplot(recoded_data, aes(x = age_group, fill = qc19)) +
+  geom_bar(position = "stack") +
+    labs(x = "Edad", y = "Conteo", fill = "Variable qc19") +
+  theme_minimal()
+
+# sd3 - Religion
+prop.table(table(recoded_data$sd3, recoded_data$qc19), margin = 1) * 100
+
+# sd1_7 - Friend/acquintance who is trans
+prop.table(table(recoded_data$sd1_7))
+prop.table(table(recoded_data$sd1_7, recoded_data$qc19), margin = 1) * 100
+
+# qc2_recode  - Experienced discrimination
+prop.table(table(recoded_data$qc2_recode, recoded_data$qc19), margin = 1) * 100
+
+variables <- c("polintr", "qa1", "d25", "d10", "d8")
+
+colors <- c("cyan", "magenta", "yellow", "green", "orange", "purple")
+
+# Lista para almacenar los gráficos
+plots <- list()
+
+# Generar gráficos para cada variable
+for (variable in variables) {
+  plot <- ggplot(recoded_data, aes_string(x = variable, fill = "qc19")) +
+    geom_bar(position = "dodge") +
+    labs(x = paste("Variable", variable), y = "Conteo", fill = "Variable cq19") +
+    theme_minimal()
+  plots[[variable]] <- plot
+}
+
+# Mostrar los gráficos en una cuadrícula
+plot_grid(plotlist = plots, nrow = 3, ncol = 2)
   
-
 ```
 
 ## Preliminary models
