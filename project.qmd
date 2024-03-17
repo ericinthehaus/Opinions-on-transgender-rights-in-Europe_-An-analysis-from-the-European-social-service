@@ -243,11 +243,11 @@ Other predictors **Age**, **Political Interest**, and **Country** also show a st
 ```{r models}
 
 model1 <- glm(qc19 ~ d11 + d70*polintr,
-             data = training.data, family = binomial)
+             data = recoded_data, family = binomial)
 model2 <- glm(qc19 ~ d11 + d70 + polintr, 
-             data = training.data, family = binomial)
+             data = recoded_data, family = binomial)
 model3 <- glm(qc19 ~ COUNTRY + d70 -1,
-              data = training.data, family = binomial)
+              data = recoded_data, family = binomial)
 
 stargazer::stargazer(model1, model2, model3, type = "text")
 exp(model3$coefficients)
