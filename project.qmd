@@ -125,8 +125,8 @@ selected_data <- data |>
 ```{r}
 
 selected_data <- selected_data |> 
-  rename(COUNTRY = isocntry) |> 
-  left_join(names, by = "COUNTRY")
+  rename(geo = isocntry) |> 
+  left_join(names, by = "geo")
 
 ```
 
@@ -141,8 +141,8 @@ imputed_data <- selected_data |>
     mutate(qa1 = ifelse(qa1 == 5, NA, as.numeric(qa1))) |> 
     mutate(polintr = ifelse(polintr == 4, NA, as.numeric(polintr))) |> 
     mutate(d63 = ifelse(d63 == 5, NA, as.numeric(d63))) |> 
-    mutate(d72_1 = ifelse(d72_1 == 4, NA, as.numeric(d72_1))) |> 
-    mutate(d72_2 = ifelse(d72_2 == 4, NA, as.numeric(d72_2)))
+    mutate(d72_1 = ifelse(d72_1 > 4, NA, as.numeric(d72_1))) |> 
+    mutate(d72_2 = ifelse(d72_2 > 4, NA, as.numeric(d72_2)))
 
 imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2")
 init = mice(imputed_data)
