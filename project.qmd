@@ -122,11 +122,9 @@ selected_data <- data |>
 ### Feature engineering
 
 ```{r}
-
-selected_data <- selected_data |> 
-  rename(COUNTRY = isocntry) |> 
-  left_join(names, by = "COUNTRY")
-
+selected_data1 <- selected_data |> 
+  rename(geo = isocntry) |> 
+  left_join(names, by = "geo")
 ```
 
 ## Cleaning missing data
@@ -135,7 +133,7 @@ Regarding missing data, we drop out some variables for having too many NAs and i
 
 ```{r, fig.height=6, fig.width=12}
 
-imputed_data <- selected_data |> 
+imputed_data <- selected_data1 |> 
     mutate(d70 = ifelse(d70 == 5, NA, as.numeric(d70))) |> 
     mutate(qa1 = ifelse(qa1 == 5, NA, as.numeric(qa1))) |> 
     mutate(polintr = ifelse(polintr == 4, NA, as.numeric(polintr))) |> 
@@ -162,17 +160,17 @@ imputed_rf = mice(imputed_data, methid=meth, iterations = 10)
 # Replace non imputed columns with imputed ones
 imputed_vars <- names(imputed_data)
 
-selected_data <- selected_data[, !(names(selected_data) %in% imputed_vars)]
+selected_data2 <- selected_data1[, !(names(selected_data1) %in% imputed_vars)]
 
-selected_data <- cbind(selected_data, imputed_data)
+selected_data3 <- cbind(selected_data2, imputed_data)
 
-colSums(is.na(selected_data))
+#colSums(is.na(selected_data3))
 ```
 
 ## Recode variables
 
 ```{r}
-recoded_data <- selected_data |> 
+recoded_data <- selected_data3 |> 
       select(-qc3) |> 
   mutate(
     
@@ -186,7 +184,7 @@ recoded_data <- selected_data |>
       labels = c("No", "Yes")
       ), 
     
-    qa1 = replace(qa1, qa1==5, NA),
+    # qa1 = replace(qa1, qa1==5, NA),
     qc2_sum = qc2_1 + qc2_2 + qc2_3 + qc2_4 +
               qc2_5 + qc2_6 + qc2_7 + qc2_8 +
               qc2_9 + qc2_10 + qc2_11 + qc2_12 +
