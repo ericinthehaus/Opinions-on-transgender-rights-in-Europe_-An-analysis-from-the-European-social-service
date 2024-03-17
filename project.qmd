@@ -224,7 +224,7 @@ ggplot(recoded_data) +
 
 ### Split training/testing data
 
-```{r splitting}
+```{r splitting, eval=FALSE}
 library(caret)
 # not sure if we need to split the data for surveys but anyway i will put it here just in case 
 in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
@@ -241,11 +241,11 @@ Other predictors **Age**, **Political Interest**, and **Country** also show a st
 ```{r models}
 
 model1 <- glm(qc19 ~ d11 + d70*polintr,
-             data = training.data, family = binomial)
+             data = recoded_data, family = binomial)
 model2 <- glm(qc19 ~ d11 + d70 + polintr, 
-             data = training.data, family = binomial)
+             data = recoded_data, family = binomial)
 model3 <- glm(qc19 ~ COUNTRY + d70 -1,
-              data = training.data, family = binomial)
+              data = recoded_data, family = binomial)
 
 stargazer::stargazer(model1, model2, model3, type = "text")
 exp(model3$coefficients)
@@ -262,7 +262,7 @@ predict.glm(model1, newdata = new.data, type = "response")
 
 With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because there are lots of false positives. Most of the real "No"s are predicted as "Yes."
 
-```{r}
+```{r eval=FALSE}
 threshold = 0.5 # set the threshold here 
 probabilities <- predict(model3, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
@@ -270,7 +270,7 @@ predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 confusionMatrix(predictions, testing.data$qc19)
 ```
 
-```{r}
+```{r eval=FALSE}
 roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
@@ -284,3 +284,5 @@ predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
 confusionMatrix(predictions, testing.data$qc19)
 ```
+
+### 
