@@ -126,7 +126,8 @@ selected_data <- data |>
 
 selected_data <- selected_data |> 
   rename(geo = isocntry) |> 
-  left_join(names, by = "geo")
+  left_join(names, by = "geo") |> 
+  left_join(countries, by = "geo") 
 
 ```
 
@@ -291,7 +292,7 @@ for (variable in variables) {
 }
 
 # Mostrar los gráficos en una cuadrícula
-plot_grid(plotlist = plots, nrow = 3, ncol = 2)
+cowplot::plot_grid(plotlist = plots, nrow = 3, ncol = 2)
   
 ```
 
@@ -299,7 +300,7 @@ plot_grid(plotlist = plots, nrow = 3, ncol = 2)
 
 ### Split training/testing data
 
-```{r splitting}
+```{r splitting, eval=FALSE}
 library(caret)
 # not sure if we need to split the data for surveys but anyway i will put it here just in case 
 in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
@@ -319,10 +320,12 @@ model1 <- glm(qc19 ~ d11 + d70*polintr,
              data = recoded_data, family = binomial)
 model2 <- glm(qc19 ~ d11 + d70 + polintr, 
              data = recoded_data, family = binomial)
-model3 <- glm(qc19 ~ COUNTRY + d70 -1,
+model3 <- glm(qc19 ~ geo + d70 -1,
+              data = recoded_data, family = binomial)
+model4 <- glm(qc19 ~ OBS_VALUE + d70 + age_group + polintr + qa1,
               data = recoded_data, family = binomial)
 
-stargazer::stargazer(model1, model2, model3, type = "text")
+stargazer::stargazer(model1, model2, model3, model4, type = "text")
 exp(model3$coefficients)
 ```
 
@@ -339,13 +342,13 @@ With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because t
 
 ```{r}
 threshold = 0.5 # set the threshold here 
-probabilities <- predict(model3, newdata = testing.data, type = "response")
+probabilities <- predict(model3, newdata = recoded_data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 
-confusionMatrix(predictions, testing.data$qc19)
+confusionMatrix(predictions, recoded_data$qc19)
 ```
 
-```{r}
+```{r eval=FALSE}
 roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
@@ -358,4 +361,8 @@ probabilities <- predict(model3, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
 confusionMatrix(predictions, testing.data$qc19)
+```
+
+```{r}
+
 ```
