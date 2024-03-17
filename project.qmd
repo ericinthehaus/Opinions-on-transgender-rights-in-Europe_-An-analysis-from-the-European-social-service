@@ -131,7 +131,7 @@ selected_data <- selected_data |>
 
 ## Cleaning missing data
 
-Regarding missing data, we drop out some variables for having too many NAs and impute the rest.
+Regarding missing data, we drop out some variables for having too many NAs and impute the rest.\
 
 ```{r, fig.height=6, fig.width=12}
 
@@ -139,9 +139,9 @@ imputed_data <- selected_data |>
     mutate(d70 = ifelse(d70 == 5, NA, as.numeric(d70))) |> 
     mutate(qa1 = ifelse(qa1 == 5, NA, as.numeric(qa1))) |> 
     mutate(polintr = ifelse(polintr == 4, NA, as.numeric(polintr))) |> 
-    mutate(d63 = ifelse(d63 == 5, NA, as.numeric(d63))) |> 
-    mutate(d72_1 = ifelse(d72_1 == 4, NA, as.numeric(d72_1))) |> 
-    mutate(d72_2 = ifelse(d72_2 == 4, NA, as.numeric(d72_2)))
+    mutate(d63 = ifelse(d63 > 5, NA, as.numeric(d63))) |> 
+    mutate(d72_1 = ifelse(d72_1 > 4, NA, as.numeric(d72_1))) |> 
+    mutate(d72_2 = ifelse(d72_2 > 4, NA, as.numeric(d72_2)))
 
 imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2")
 init = mice(imputed_data)
@@ -173,7 +173,7 @@ colSums(is.na(selected_data))
 
 ```{r}
 recoded_data <- selected_data |> 
-      select(-qc3) |> 
+  select(-qc3) |> 
   mutate(
     
     qc19 = factor(
@@ -181,16 +181,18 @@ recoded_data <- selected_data |>
         qc19 == 2 ~ 0, # make No as zero 
         qc19 == 3 ~ NA, # make DK as NA
         qc19 == 1 ~ 1 # keep Yes as 1        
-        ),
+      ),
       # label the values 
       labels = c("No", "Yes")
-      ), 
+    ), 
     
-    qa1 = replace(qa1, qa1==5, NA),
+    qa1 = factor(qa1, ordered = FALSE,
+                 labels = c("Yes a lot", "Somewhat", "Not really", "Not at all")
+    ),
     qc2_sum = qc2_1 + qc2_2 + qc2_3 + qc2_4 +
-              qc2_5 + qc2_6 + qc2_7 + qc2_8 +
-              qc2_9 + qc2_10 + qc2_11 + qc2_12 +
-              qc2_13 + qc2_14,
+      qc2_5 + qc2_6 + qc2_7 + qc2_8 +
+      qc2_9 + qc2_10 + qc2_11 + qc2_12 +
+      qc2_13 + qc2_14,
     qc2_recode = case_when(
       qc2_sum > 0 ~ 1,
       qc2_15 == 1 ~ 0,
@@ -198,22 +200,25 @@ recoded_data <- selected_data |>
     # qc6_recode  = mean(qc6_1, qc6_2),
     d15a = factor(d15a, ordered = FALSE ),
     d1 = replace(d1, d1 %in% c(11,12), NA),
+    d63 = factor(d63, ordered = F,
+                 labels = c("working", "lwr-mid", "middle", "upr-mid", "higher")
+    ),
     d70 = factor(d70, ordered = F,
-          labels = c("Very", "Somewhat", "Not very", "Not at all")), 
+                 labels = c("Very", "Somewhat", "Not very", "Not at all")), 
     polintr = factor(polintr, ordered = F,
-          labels = c("frequently", "occasionally", "never"))) |> 
+                     labels = c("frequently", "occasionally", "never"))) |> 
   select(
     -c(qc2_1:qc2_16)
   )
 
-summary(recoded_data$d70)
+summary(recoded_data$d63)
 
 ```
 
 ## Descriptive
 
 ```{r}
-
+table(recoded_data$qc19)
 
 ggplot(recoded_data) +
   geom_bar(aes(x = d70), fill = "blue") +
@@ -222,7 +227,7 @@ ggplot(recoded_data) +
 
 ```
 
-## Preliminary models
+## Modeling
 
 ### Split training/testing data
 
@@ -230,8 +235,8 @@ ggplot(recoded_data) +
 library(caret)
 # not sure if we need to split the data for surveys but anyway i will put it here just in case 
 in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
-training.data <- recoded_data[in.train, ]
-testing.data <- recoded_data[-in.train, ]
+training.data <- recoded_data[in.train ]
+testing.data <- recoded_data[-in.train ]
 ```
 
 ### Three binomial logistic models
@@ -272,7 +277,7 @@ predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 confusionMatrix(predictions, testing.data$qc19)
 ```
 
-```{r}
+```{r roc}
 roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
@@ -286,3 +291,17 @@ predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
 confusionMatrix(predictions, testing.data$qc19)
 ```
+
+### Multilevel models
+
+```{r}
+library(lme4)
+mixed_model1 <- glmer(qc19 ~ d70 + polintr + d63 + qa1 +
+    (1 | COUNTRY), data = training.data, family = binomial, 
+    control = glmerControl(optimizer = "bobyqa"),
+    nAGQ = 10)
+
+summary(mixed_model1)
+```
+
+###  
