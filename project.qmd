@@ -10,6 +10,7 @@ editor: visual
 library(tidyverse)
 library(haven)
 library(readxl)
+library(mice)
 ```
 
 # Loading databases
@@ -128,10 +129,51 @@ selected_data <- selected_data |>
 
 ```
 
-## Select variables
+## Cleaning missing data
+
+Regarding missing data, we drop out some variables for having too many NAs and impute the rest.
+
+```{r, fig.height=6, fig.width=12}
+
+imputed_data <- selected_data |> 
+    mutate(d70 = ifelse(d70 == 5, NA, as.numeric(d70))) |> 
+    mutate(qa1 = ifelse(qa1 == 5, NA, as.numeric(qa1))) |> 
+    mutate(polintr = ifelse(polintr == 4, NA, as.numeric(polintr))) |> 
+    mutate(d63 = ifelse(d63 == 5, NA, as.numeric(d63))) |> 
+    mutate(d72_1 = ifelse(d72_1 == 4, NA, as.numeric(d72_1))) |> 
+    mutate(d72_2 = ifelse(d72_2 == 4, NA, as.numeric(d72_2)))
+
+imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2")
+init = mice(imputed_data)
+
+meth = init$method
+
+meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2")] <- "rf"
+
+imputed_rf = mice(imputed_data, methid=meth, iterations = 10)
+
+  
+  imputed_data <- cbind(imputed_data, complete(imputed_rf))
+
+  imputed_data <- imputed_data |> 
+    select(-1, -2, -3, -4, -5, -6)
+  
+
+# Replace non imputed columns with imputed ones
+imputed_vars <- names(imputed_data)
+
+selected_data <- selected_data[, !(names(selected_data) %in% imputed_vars)]
+
+selected_data <- cbind(selected_data, imputed_data)
+
+colSums(is.na(selected_data))
+```
+
+## Recode variables
 
 ```{r}
 recoded_data <- selected_data |> 
+      select(-qc3) |> 
   mutate(
     
     qc19 = factor(
@@ -156,19 +198,27 @@ recoded_data <- selected_data |>
     # qc6_recode  = mean(qc6_1, qc6_2),
     d15a = factor(d15a, ordered = FALSE ),
     d1 = replace(d1, d1 %in% c(11,12), NA),
-    d63 = replace(d63, d63 > 5 , NA),
-    d70 = factor(replace(d70, d70 == 5, NA), ordered = F,
+    d70 = factor(d70, ordered = F,
           labels = c("Very", "Somewhat", "Not very", "Not at all")), 
-    polintr = factor(replace(polintr, polintr == 4, NA), ordered = F,
-          labels = c("frequently", "occasionally", "never")), 
-    d72_1 = replace(d72_1, d72_1 > 4, NA ),
-    d72_2 = replace(d72_2, d72_2 > 4, NA ),
-    ) |> 
+    polintr = factor(polintr, ordered = F,
+          labels = c("frequently", "occasionally", "never"))) |> 
   select(
     -c(qc2_1:qc2_16)
   )
 
 summary(recoded_data$d70)
+
+```
+
+## Descriptive
+
+```{r}
+
+
+ggplot(recoded_data) +
+  geom_bar(aes(x = d70), fill = "blue") +
+  labs(x = "Variable d70", y = "Frecuencia", title = "Gráfico de barras de la variable d70")
+  
 
 ```
 
