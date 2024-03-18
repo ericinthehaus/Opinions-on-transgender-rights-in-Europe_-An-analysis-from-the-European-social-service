@@ -454,7 +454,7 @@ modelo <- glm(qc19 ~ d70 + qa1 + polintr + d63 + d72_1 + d72_2 + sd3 + sd1_7 + d
 
 summary(modelo)
 
-threshold = 0.5 # set the threshold here 
+threshold = 0.6 # set the threshold here 
 probabilities <- predict(modelo, newdata = recoded_data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 confusionMatrix(predictions, recoded_data$qc19)
@@ -471,6 +471,7 @@ threshold = 0.5 # set the threshold here
 probabilities <- predict(modelo, newdata = recoded_data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 confusionMatrix(predictions, recoded_data$qc19)
+
 ```
 
 ```{r models}
@@ -482,6 +483,9 @@ model2 <- glm(qc19 ~ d11 + d70 + polintr,
 model3 <- glm(qc19 ~ geo + d70 -1,
               data = recoded_data, family = binomial)
 model4 <- glm(qc19 ~ OBS_VALUE + d70 + age_group + polintr + as.factor(qa1),
+              data = recoded_data, family = binomial)
+
+model5 <- glm(qc19 ~ OBS_VALUE*sd3,
               data = recoded_data, family = binomial)
 
 stargazer::stargazer(model1, model2, model3, model4, type = "text")
@@ -523,6 +527,8 @@ predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 confusionMatrix(predictions, recoded_data$qc19)
 ```
 
+### Mixed models 
+
 ```{r}
 library(lme4)
 
@@ -535,12 +541,33 @@ mixed_model3 <- glmer(qc19 ~ d70 + (1|geo),
               data = recoded_data, family = binomial)
 mixed_model4 <- glmer(qc19 ~ d70 + (OBS_VALUE|sd3) +
                         polintr + qa1 + (d11|geo) + d10,
-              data = recoded_data, family = binomial,
-              )
+              data = recoded_data, family = binomial)
 
-stargazer::stargazer(mixed_model4, type = "text")
-summary(mixed_model4 )
-exp(coef(mixed_model4)$sd3)
+mixed_model5 <- glmer(qc19 ~ d10 + OBS_VALUE + (OBS_VALUE|sd3),
+              data = recoded_data, family = binomial)
+# reversing the order of levels for knowing a trans person. No is base.
+recoded_data$know_transperson <- factor(recoded_data$sd1_7, levels = c("No", "Yes") )
+levels(recoded_data$know_transperson)
+mixed_model6 <- glmer(qc19 ~ d70 + qa1+ polintr + d72_1 + d72_2  + d10 +
+                        know_transperson + d25 + d8 + d25 + (1|sd3) + (1|geo), 
+              data = recoded_data, family = binomial
+)
+
+
+stargazer::stargazer(modelo, mixed_model4, mixed_model5, type = "text", model.names = T)
+summary(mixed_model6 )
+stargazer::stargazer(coef(mixed_model6)[1], type = "text")
+```
+
+```{r}
+coefficients <- lme4::fixef(mixed_model6)
+standard_deviations <- sqrt(diag(vcov(mixed_model6)))
+
+# Combine coefficients and standard deviations into a matrix
+model_summary <- cbind(coefficients, standard_deviations)
+
+# Display the coefficients and standard deviations using stargazer
+stargazer::stargazer(model_summary, type = "text", title = "mixed_model6")
 ```
 
 `mixed_model4` --
@@ -549,22 +576,23 @@ The 4th mixed model shows life satisfaction, political interest, sex, and opinio
 
 The results from the random effects show that the grouping variable *religion* has an effect on the intercept but only a minor effect on the slope for country-level income inequality. In other words, Atheists are much more likely to say "yes" for the outcome variable than other religious assocations. In countries that are more unequal, they are less likely than in countries that are more equal financially. But that slope is very small. For an increase of one Gini "score," the decline in odds of saying "yes" is only 0.9 percent. On the other hand, Sunni Muslims are much *less* likely to say "yes" than the average.
 
-### Visualizing the mixed models
+#### Visualizing the mixed models
 
 ```{r}
 library(sjPlot)
-sjPlot::plot_model(model4, type = "pred", terms = "age_group",) +
+sjPlot::plot_model(mixed_model5, type = "pred", 
+                   term = "OBS_VALUE [all]") +
   theme_classic()
 sjPlot::plot_model(mixed_model4, type = "pred", terms =  "d10") +
   labs(x = "gender")
 ```
 
-### Testing accuracy of mixed models
+#### Testing accuracy of mixed models
 
 ```{r}
 library(caret)
 threshold = 0.6 # set the threshold here 
-probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response")
+probabilities <- predict(mixed_model6, newdata = recoded_data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 
 confusionMatrix(predictions, recoded_data$qc19)
@@ -583,4 +611,17 @@ probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response"
 predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
 confusionMatrix(predictions, recoded_data$qc19)
+```
+
+```{r}
+cor.test((as.numeric(recoded_data$qc19)-1),recoded_data$OBS_VALUE)
+
+recoded_data |>
+  filter(!is.na(qc19)) |> 
+  ggplot(aes(x = OBS_VALUE, y = sd3, size = qc19)) +
+  geom_point()
+
+recoded_data |> 
+  group
+table(recoded_data$sd3, recoded_data$qc19, )
 ```
