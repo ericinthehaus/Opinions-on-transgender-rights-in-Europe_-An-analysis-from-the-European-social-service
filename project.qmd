@@ -434,6 +434,9 @@ model3 <- glm(qc19 ~ geo + d70 -1,
 model4 <- glm(qc19 ~ OBS_VALUE + d70 + age_group + polintr + as.factor(qa1),
               data = recoded_data, family = binomial)
 
+model5 <- glm(qc19 ~ OBS_VALUE*sd3,
+              data = recoded_data, family = binomial)
+
 stargazer::stargazer(model1, model2, model3, model4, type = "text")
 exp(model3$coefficients)
 ```
@@ -488,9 +491,12 @@ mixed_model4 <- glmer(qc19 ~ d70 + (OBS_VALUE|sd3) +
               data = recoded_data, family = binomial,
               )
 
+mixed_model5 <- glmer(qc19 ~ d10 + OBS_VALUE + (OBS_VALUE|sd3),
+              data = recoded_data, family = binomial)
+
 stargazer::stargazer(mixed_model4, type = "text")
-summary(mixed_model4 )
-exp(coef(mixed_model4)$sd3)
+summary(mixed_model5 )
+exp(coef(mixed_model5)$sd3)
 ```
 
 `mixed_model4` --
@@ -533,4 +539,17 @@ probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response"
 predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
 confusionMatrix(predictions, recoded_data$qc19)
+```
+
+```{r}
+cor.test((as.numeric(recoded_data$qc19)-1),recoded_data$OBS_VALUE)
+
+recoded_data |>
+  filter(!is.na(qc19)) |> 
+  ggplot(aes(x = OBS_VALUE, y = sd3, size = qc19)) +
+  geom_point()
+
+recoded_data |> 
+  group
+table(recoded_data$sd3, recoded_data$qc19, )
 ```
