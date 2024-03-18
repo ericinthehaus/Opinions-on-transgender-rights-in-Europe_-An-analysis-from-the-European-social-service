@@ -509,7 +509,8 @@ The results from the random effects show that the grouping variable *religion* h
 
 ```{r}
 library(sjPlot)
-sjPlot::plot_model(model4, type = "pred", terms = "age_group",) +
+sjPlot::plot_model(mixed_model5, type = "pred", 
+                   term = "OBS_VALUE [all]") +
   theme_classic()
 sjPlot::plot_model(mixed_model4, type = "pred", terms =  "d10") +
   labs(x = "gender")
