@@ -13,6 +13,7 @@ library(readxl)
 library(mice)
 library(ggplot2)
 library(gridExtra)
+library(caret)
 ```
 
 # Loading databases
@@ -337,11 +338,12 @@ new.data <- data.frame(d11 = c(20, 30, 40),
 predict.glm(model1, newdata = new.data, type = "response")
 ```
 
-### Test data
+### Testing accuracy of non-mixed effects models
 
 With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because there are lots of false positives. Most of the real "No"s are predicted as "Yes."
 
 ```{r}
+
 threshold = 0.5 # set the threshold here 
 probabilities <- predict(model3, newdata = recoded_data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
@@ -349,7 +351,7 @@ predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 confusionMatrix(predictions, recoded_data$qc19)
 ```
 
-```{r eval=FALSE}
+```{r eval=true}
 roc <- pROC::roc(recoded_data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
@@ -383,7 +385,7 @@ stargazer::stargazer(mixed_model4, type = "text")
 summary(mixed_model4)
 ```
 
-### Visualizing the mixed models 
+### Visualizing the mixed models
 
 ```{r}
 library(sjPlot)
@@ -393,11 +395,28 @@ sjPlot::plot_model(mixed_model4, type = "pred", terms =  "d10") +
   labs(x = "gender")
 ```
 
+### Testing accuracy of mixed models
+
 ```{r}
 library(caret)
 threshold = 0.6 # set the threshold here 
 probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
+
+confusionMatrix(predictions, recoded_data$qc19)
+```
+
+```{r}
+roc <- pROC::roc(recoded_data$qc19, probabilities, na.rm = TRUE) 
+sens <- roc$sensitivities #include sensitivities in test data
+spec <- roc$specificities
+
+plot(roc, col='green', print.thres=TRUE)
+roc$levels
+
+threshold = .577 # set the threshold here 
+probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response")
+predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 
 confusionMatrix(predictions, recoded_data$qc19)
 ```
