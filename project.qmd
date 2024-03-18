@@ -60,11 +60,17 @@ countries <- gini |>
   left_join(ilga, by = "COUNTRY") |> 
   select(-TIME_PERIOD, CONTINENT) |> 
   filter(!is.na(CONTINENT))
+
+# Turn all ILGA variables to factors
+countries <- countries |> 
+    mutate_at(vars(7:ncol(countries)), as.factor)
+  
 ```
 
 ## Selecting variables in the main dataset
 
 ```{r}
+
 selected_data <- data |> 
   select(
     uniqid, 
@@ -119,17 +125,10 @@ selected_data <- data |>
     p5, # paradata
     p4 # paradata
 ) 
-```
-
-### Feature engineering
-
-```{r}
 
 selected_data <- selected_data |> 
   rename(geo = isocntry) |> 
-  left_join(names, by = "geo") |> 
-  left_join(countries, by = "geo") 
-
+  left_join(names, by = "geo")
 ```
 
 ## Cleaning missing data
@@ -223,11 +222,16 @@ recoded_data <- selected_data |>
   select(
     -c(qc2_1:qc2_16))
 
-summary(recoded_data$qa1)
+
+# Join recoded data with countries data
+recoded_data <- recoded_data |> 
+  left_join(countries, by = "geo")
 
 ```
 
 ## Descriptive
+
+### Individual characteristics
 
 Most people answer "yes" to our target question (52.7%), but there are also a significant amount of 'no' (35%) and 'dont know' answers (11.9%).
 
@@ -279,8 +283,6 @@ prop.table(table(recoded_data$d63, recoded_data$qc19), margin = 1) * 100
 
 variables <- c("age_group", "polintr", "qa1", "d25", "d10")
 
-colors <- c("cyan", "magenta", "yellow", "green", "orange", "purple")
-
 # Lista para almacenar los gráficos
 plots <- list()
 
@@ -296,6 +298,91 @@ for (variable in variables) {
 # Mostrar los gráficos en una cuadrícula
 cowplot::plot_grid(plotlist = plots, nrow = 3, ncol = 2)
   
+```
+
+### Countries descriptive analysis
+
+-   geo - By country. We observe that the least suporting country is Hungary with a 84% of people against, meanwhile the most supporting one is Spain.
+
+-   Marriage. 42% of the European countries allow homosexual marriage. From countries which don't, there's a majority of people (59%) who are against trans people documentation change. However, in countries which do allow homosexual marriage, have a majority of 76% in favor.
+
+-   Gini coefficient value. At first glance, there doesn't seem to be a clear tendency. Visually we can't detect right now wheter a higher or lower gini score is related to more or less support.
+
+-   Hate crime laws. More than half of the European countries have hate crime laws (54%). In this case, both groups of countries have a similar response ratio, with a 3% more of people being in favor of our target question in the countries with these laws.
+
+-   Banned conversion therapies. Only a 3% of countries had banned them in 2019. There's a big difference between both groups. In countries were they've been banned, a 85% of people agrees with allowing trans people change their documentation.
+
+-   Existence of gender recogition administrative procedures. They are present in a 81% of countries. In countries where they don't exist, a 62% of people are against; meanwhile, a 60% of people are on favor on countries where they do.
+
+-   No medical diagnosis needed for documentation changes. Only a 30% of countries allowed this in 2019. In countries where they allow it, a 79% of people is in favour, compared to the 48% of countries where they don't.
+
+-   Dephatologisation. Only 6% of countries had specific laws regarding the dephatologisation of trans identities. In these few countries there's also a much higher acceptance: 80% in favour.
+
+It's easy to tell that anti-discrimination laws are reflected in an increase in the acceptance of transgender individuals in the population of these countries.
+
+```{r, fig.height=6, fig.width=12}
+
+# By country
+ggplot(data = recoded_data, aes(x = geo, fill = factor(qc19))) +
+  geom_bar(position = "fill")+
+  labs(x = "País", y = "Proporción", fill = "Valor en qc19") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+
+prop.table(table(recoded_data$geo, recoded_data$qc19), margin = 1) * 100
+
+# Marriage
+prop.table(table(countries$Marriage))
+prop.table(table(recoded_data$Marriage, recoded_data$qc19), margin = 1) * 100
+
+# Gini value
+data <- as.data.frame.table(prop.table(table(recoded_data$OBS_VALUE, recoded_data$qc19), margin = 1) * 100)
+ggplot(data = data, aes(x = Var1, y = Freq, color = Var2, group = Var2)) +
+  geom_line() +
+  labs(x = "OBS_VALUE", y = "Proporción (%)", color = "Valor en qc19") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Hate Crime Laws`
+prop.table(table(countries$`Hate Crime Laws`))
+prop.table(table(recoded_data$`Hate Crime Laws`, recoded_data$qc19), margin = 1) * 100
+
+# Banned Conversion Therapies
+prop.table(table(countries$`Banned Conversion Therapies`))
+prop.table(table(recoded_data$`Banned Conversion Therapies`, recoded_data$qc19), margin = 1) * 100
+
+# Existence of gender recogition administrative procedures
+prop.table(table(countries$`Existence of gender recogition administrative procedures`))
+prop.table(table(recoded_data$`Existence of gender recogition administrative procedures`, recoded_data$qc19), margin = 1) * 100
+
+# No medical diagnosis needed
+prop.table(table(countries$`No medical diag0sis needed`))
+prop.table(table(recoded_data$`No medical diag0sis needed`, recoded_data$qc19), margin = 1) * 100
+
+# Depathologisation
+prop.table(table(countries$`Depathologisation`))
+prop.table(table(recoded_data$`Depathologisation`, recoded_data$qc19), margin = 1) * 100
+
+
+variables <- c("Marriage", "`Hate Crime Laws`", "`Banned Conversion Therapies`", "`Existence of gender recogition administrative procedures`", "`No medical diag0sis needed`", "`Depathologisation`")
+
+# Lista para almacenar los gráficos
+plots <- list()
+
+# Generar gráficos para cada variable
+for (variable in variables) {
+  plot <- ggplot(recoded_data, aes_string(x = variable, fill = "qc19")) +
+    geom_bar(position = "dodge") +
+    labs(x = paste("Variable", variable), y = "Conteo", fill = "Variable cq19") +
+    theme_minimal()
+  plots[[variable]] <- plot
+}
+
+# Mostrar los gráficos en una cuadrícula
+plot_grid(plotlist = plots, nrow = 3, ncol = 3)
+
+
 ```
 
 ## Preliminary models
