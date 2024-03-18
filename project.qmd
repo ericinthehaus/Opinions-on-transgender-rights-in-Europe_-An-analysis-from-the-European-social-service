@@ -90,23 +90,22 @@ selected_data <- data |>
     # qa17,
     sd1_7, # do you know someone who is transgender. 
     # sd2_1, sd2_2, sd2_3, sd2_4, sd2_5, sd2_6, sd2_7, sd2_8,
-    sd3,
+    sd3, 
     qc1_4, 
+    qc1_8,
     qc2_1:qc2_14, # recode to 1 for discrimination == yes
       qc2_15, # recode to 0. discriminatino == no
       qc2_16, # recode to NA, impute missing data.  DONT KNOW
     # qc3,
     # qc4,
-    qc6_1:qc6_11, # calculate average in new variable. not including values of 11 or 12
+    qc5_1, qc5_3,
+    qc6_1r, qc6_2r, qc6_3r, qc6_10r, # is there discrimination towards...
     qc7,
-    qc8,
-    qc9_1:qc9_11,
-    qc10,
-    qc11_1:qc1_10,
-    qc12_1r, qc12_2r, qc12_3r, qc12_4r, qc12_5r, qc12_6r, qc12_7r, qc12_8r, qc12_9r, qc12_10r, qc12_11r, qc12_12r, qc12_13r, qc12_14r, qc12_15r,
-    qc13_1r, qc13_2r, qc13_3r, qc13_4r, qc13_5r, qc13_6r, qc13_7r, qc13_8r, qc13_9r, qc13_10r, qc13_11r, qc13_12r, qc13_13r, qc13_14r, qc13_15r,
+    qc9_1,qc9_4, qc9_5, qc9_10,
+    qc12_1r, qc12_2r, qc12_6r, qc12_10r, qc12_11r,
+   # qc13_1r, qc13_2r, qc13_3r, qc13_4r, qc13_5r, qc13_6r, qc13_7r, qc13_8r, qc13_9r, qc13_10r, qc13_11r, qc13_12r, qc13_13r, qc13_14r, qc13_15r,
     qc15_1:qc15_3,
-    qc17_1:qc17_7,
+    qc17_1:qc17_5,
     qc18_1r, qc18_2r, qc18_3r,
     qc19, # TARGET VARIABLE 
     qc20,
@@ -124,7 +123,9 @@ selected_data <- data |>
     p3r, # paradata
     p5, # paradata
     p4 # paradata
-) 
+)
+
+
 
 selected_data <- selected_data |> 
   rename(geo = isocntry) |> 
@@ -148,24 +149,48 @@ imputed_data <- selected_data |>
     mutate(qa1 = ifelse(qa1 %in% 5, NA, as.numeric(qa1))) |> 
     mutate(sd1_7 = ifelse(sd1_7 %in% c(3,4), NA, as.numeric(sd1_7))) |> 
     mutate(d25 = ifelse(d25 > 3, NA, as.numeric(d25))) |> 
-    mutate(d8 = ifelse(d8 %in% c(98,99, 97), NA, as.numeric(d8))) 
+    mutate(d8 = ifelse(d8 %in% c(98,99, 97), NA, as.numeric(d8))) |> 
+   mutate(qc1_4 = ifelse(qc1_4 > 4, NA, as.numeric(qc1_4))) |> 
+   mutate(qc1_8 = ifelse(qc1_8 > 4, NA, as.numeric(qc1_8))) |> 
+   mutate(qc6_1r = ifelse(qc6_1r> 3, NA, as.numeric(qc6_1r))) |> 
+   mutate(qc6_2r = ifelse(qc6_2r > 3, NA, as.numeric(qc6_2r))) |>    mutate(qc6_3r = ifelse(qc6_3r>3, NA, as.numeric(qc6_3r))) |> 
+   mutate(qc6_10r = ifelse(qc6_10r>3,NA,as.numeric(qc6_10r))) |> 
+   mutate(qc7 = ifelse(qc7>10,NA,as.numeric(qc7))) |> 
+   mutate(qc9_1 = ifelse(qc9_1>4,NA,as.numeric(qc9_1))) |> 
+   mutate(qc9_4 = ifelse(qc9_4>4,NA,as.numeric(qc9_4))) |> 
+   mutate(qc9_5 = ifelse(qc9_5>4,NA,as.numeric(qc9_5))) |> 
+   mutate(qc9_10 = ifelse(qc9_10>4,NA,as.numeric(qc9_10))) |> 
+   mutate(qc5_1 = ifelse(qc5_1>2,NA,as.numeric(qc5_1))) |> 
+   mutate(qc5_3 = ifelse(qc5_3>2,NA,as.numeric(qc5_3))) |> 
+   mutate(qc12_1r = ifelse(qc12_1r>10,NA,as.numeric(qc12_1r))) |>
+   mutate(qc12_2r = ifelse(qc12_2r>10,NA,as.numeric(qc12_2r))) |>
+   mutate(qc12_6r = ifelse(qc12_6r>10,NA,as.numeric(qc12_6r))) |>
+   mutate(qc12_10r = ifelse(qc12_10r>10,NA,as.numeric(qc12_10r))) |>
+   mutate(qc12_11r = ifelse(qc12_11r>10,NA,as.numeric(qc12_11r))) |> 
+   mutate(qc15_1 = ifelse(qc15_1>4,NA,as.numeric(qc15_1))) |> 
+   mutate(qc15_2 = ifelse(qc15_2>4,NA,as.numeric(qc15_2))) |> 
+   mutate(qc15_3 = ifelse(qc15_3>4,NA,as.numeric(qc15_3))) |> 
+   mutate(qc17_1 = ifelse(qc17_1>4,NA,as.numeric(qc17_1))) |> 
+   mutate(qc17_2 = ifelse(qc17_2>4,NA,as.numeric(qc17_2))) |> 
+   mutate(qc17_3 = ifelse(qc17_3>4,NA,as.numeric(qc17_3))) |> 
+   mutate(qc17_4 = ifelse(qc17_4>4,NA,as.numeric(qc17_4))) |> 
+   mutate(qc17_5 = ifelse(qc17_5>4,NA,as.numeric(qc17_5))) |> 
+   mutate(qc18_1r = ifelse(qc18_1r>3,NA,as.numeric(qc18_1r))) |> 
+   mutate(qc18_2r = ifelse(qc18_2r>3,NA,as.numeric(qc18_2r))) |> 
+   mutate(qc18_3r = ifelse(qc18_3r>3,NA,as.numeric(qc18_3r))) |> 
+   mutate(qc20 = ifelse(qc20>2,NA,as.numeric(qc20))) |> 
+   mutate(d1 = ifelse(d1>10,NA,as.numeric(d1)))
 
-imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8")
-init = mice(imputed_data)
-
-meth = init$method
+imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8", "qc1_4", "qc1_8", "qc6_1r", "qc6_2r","qc6_3r", "qc6_10r", "qc7", "qc9_1", "qc9_4", "qc9_5","qc9_10", "qc5_1", "qc5_3", "qc12_1r", "qc12_2r", "qc12_6r", "qc12_10r", "qc12_11r", "qc15_1", "qc15_2", "qc15_3", "qc17_1", "qc17_2", "qc17_3", "qc17_3", "qc17_5", "qc18_1r", "qc18_2r", "qc18_3r", "qc20", "d1")
 
 set.seed(123)
-meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8")] <- "rf"
+meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8", "qc1_4", "qc1_8", "qc6_1r", "qc6_2r","qc6_3r", "qc6_10r", "qc7", "qc9_1", "qc9_4", "qc9_5","qc9_10", "qc5_1", "qc5_3", "qc12_1r", "qc12_2r", "qc12_6r", "qc12_10r", "qc12_11r", "qc15_1", "qc15_2", "qc15_3", "qc17_1", "qc17_2", "qc17_3", "qc17_3", "qc17_5", "qc18_1r", "qc18_2r", "qc18_3r", "qc20", "d1")] <- "rf"
 
 imputed_rf = mice(imputed_data, methid=meth, iterations = 10)
 
   
-  imputed_data <- cbind(imputed_data, complete(imputed_rf))
+imputed_data <- complete(imputed_rf)
 
-  imputed_data <- imputed_data |> 
-    select(-1, -2, -3, -4, -5, -6, -7, -8, -9, -10)
-  
 
 # Replace non imputed columns with imputed ones
 imputed_vars <- names(imputed_data)
@@ -181,7 +206,6 @@ colSums(is.na(selected_data))
 
 ```{r}
 recoded_data <- selected_data |> 
-      select(-qc3) |> 
   mutate(
     
     qc19 = factor(
@@ -218,10 +242,8 @@ recoded_data <- selected_data |>
     sd1_7 = factor(sd1_7, ordered = F, labels = c("Yes", "No")),
     d25 = factor(d25, ordered = F, labels = c("Rural area", "Small/medium town", "Large town")),
     age_group = cut(d11, breaks = seq(0, 100, by = 10), include.lowest = TRUE),
-    school_group = cut(d8, breaks = seq(1, 50, by = 5), include.lowest = TRUE)) |> 
-  select(
-    -c(qc2_1:qc2_16))
-
+    school_group = cut(d8, breaks = seq(1, 50, by = 5), include.lowest = TRUE),
+    qc20 = factor(qc20, ordered = F, labels = c("Yes", "No"))) 
 
 # Join recoded data with countries data
 recoded_data <- recoded_data |> 
@@ -422,6 +444,22 @@ testing.data <- recoded_data[-in.train, ]
 According to all 3 models below, **life satisfaction** has a strong effect on an individual's opinion about transgender rights. The model results show that respondents who said that they are "not very" and "not at all" satisfied with their life are much more likely to answer "No" to the question about giving transgender people the right to change their civil documents. The coefficients show that both negative responses have a similar effect on the odds that they will answer Yes/No. Respondents who answered "somewhat satisfied" are also more likely to answer "No" but not by much.
 
 Other predictors **Age**, **Political Interest**, and **Country** also show a strong effect on the outcome.
+
+testing
+
+```{r}
+modelo <- glm(qc19 ~ d70 + qa1+ polintr + d72_1 + d72_2 + sd3 + sd1_7 + d25 + d8, data = recoded_data, family = binomial)
+
+summary(modelo)
+
+threshold = 0.5 # set the threshold here 
+probabilities <- predict(modelo, newdata = recoded_data, type = "response")
+predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
+confusionMatrix(predictions, recoded_data$qc19)
+
+
+
+```
 
 ```{r models}
 
