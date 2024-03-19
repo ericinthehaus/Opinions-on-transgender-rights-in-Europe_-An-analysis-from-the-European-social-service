@@ -467,14 +467,15 @@ confusionMatrix(predictions, recoded_data$qc19)
 In model we only keep the variables which are significative. From the variable qc9, the only
 
 ```{r}
-modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, data = recoded_data, family = binomial)
+modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
+              data = training.data, family = binomial)
 
 summary(modelo)
 
 threshold = 0.5 # set the threshold here 
-probabilities <- predict(modelo, newdata = recoded_data, type = "response")
+probabilities <- predict(modelo, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
-confusionMatrix(predictions, recoded_data$qc19)
+confusionMatrix(predictions, testing.data$qc19)
 
 ```
 
@@ -562,7 +563,8 @@ mixed_model6 <- glmer(qc19 ~ d70 + qa1+ polintr + d72_1 + d72_2  + d10 +
               data = recoded_data, family = binomial
 )
 
-mixed_model7 <- glmer(qc19 ~ d70 + qa1 + d63 + (1|sd3) + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, data = recoded_data, family = binomial
+mixed_model7 <- glmer(qc19 ~ d70 + qa1 + d63 + (1|sd3) + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, 
+                      data = training.data, family = binomial
   
 )
 
@@ -610,11 +612,11 @@ sjPlot::plot_model(mixed_model7, type = "pred",
 
 ```{r}
 library(caret)
-threshold = 0.6 # set the threshold here 
+threshold = 0.5 # set the threshold here 
 probabilities <- predict(mixed_model7, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 
-confusionMatrix(predictions, recoded_data$qc19)
+confusionMatrix(predictions, testing.data$qc19)
 ```
 
 ```{r}
@@ -669,10 +671,15 @@ table(recoded_data$sd3, recoded_data$qc19, )
 
     -   what were we most surprised by
 
-## Model 7 - Giorgio 
+## Model 7 - Giorgio
 
 ```{r}
-summary(model7)
+modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
+              data = training.data, family = binomial)
+
+
+
+summary(modelo)
 roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
