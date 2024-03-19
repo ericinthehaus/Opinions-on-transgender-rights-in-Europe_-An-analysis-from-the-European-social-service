@@ -666,3 +666,17 @@ table(recoded_data$sd3, recoded_data$qc19, )
 -   Conclusions! -eric
 
     -   what were we most surprised by
+
+## Model 7 - Giorgio 
+
+```{r}
+summary(model7)
+roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
+sens <- roc$sensitivities #include sensitivities in test data
+spec <- roc$specificities
+
+plot(roc, col='green', print.thres=TRUE)
+roc$levels
+
+confusionMatrix(predictions, testing.data$qc19)
+```
