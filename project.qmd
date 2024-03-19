@@ -184,13 +184,15 @@ imputed_data <- selected_data |>
 imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8", "qc1_4", "qc1_8", "qc6_1r", "qc6_2r","qc6_3r", "qc6_10r", "qc7", "qc9_1", "qc9_4", "qc9_5","qc9_10", "qc5_1", "qc5_3", "qc12_1r", "qc12_2r", "qc12_6r", "qc12_10r", "qc12_11r", "qc15_1", "qc15_2", "qc15_3", "qc17_1", "qc17_2", "qc17_3", "qc17_3", "qc17_5", "qc18_1r", "qc18_2r", "qc18_3r", "qc20", "d1")
 
 set.seed(123)
-meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8", "qc1_4", "qc1_8", "qc6_1r", "qc6_2r","qc6_3r", "qc6_10r", "qc7", "qc9_1", "qc9_4", "qc9_5","qc9_10", "qc5_1", "qc5_3", "qc12_1r", "qc12_2r", "qc12_6r", "qc12_10r", "qc12_11r", "qc15_1", "qc15_2", "qc15_3", "qc17_1", "qc17_2", "qc17_3", "qc17_3", "qc17_5", "qc18_1r", "qc18_2r", "qc18_3r", "qc20", "d1")] <- "rf"
+
+init = mice(imputed_data)
+meth = init$method
+
+meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8", "qc1_4", "qc1_8", "qc6_1r", "qc6_2r","qc6_3r", "qc6_10r", "qc7", "qc9_1", "qc9_4", "qc9_5","qc9_10", "qc5_1", "qc5_3", "qc12_1r", "qc12_2r", "qc12_6r", "qc12_10r", "qc12_11r", "qc15_1", "qc15_2", "qc15_3", "qc17_1", "qc17_2", "qc17_3", "qc17_3", "qc17_5", "qc18_1r", "qc18_2r", "qc18_3r", "qc20", "d1")] <- "rf" 
 
 imputed_rf = mice(imputed_data, methid=meth, iterations = 10)
-
   
 imputed_data <- complete(imputed_rf)
-
 
 # Replace non imputed columns with imputed ones
 imputed_vars <- names(imputed_data)
@@ -652,7 +654,7 @@ table(recoded_data$sd3, recoded_data$qc19, )
 
     -   what were we most surprised by
 
-## Model 7 - Giorgio 
+## Model 7 - Giorgio
 
 ```{r}
 summary(model7)
