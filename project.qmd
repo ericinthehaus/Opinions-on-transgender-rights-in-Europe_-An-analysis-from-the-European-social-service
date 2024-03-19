@@ -435,8 +435,10 @@ Here are the various predictor variables we have chosen to include in the models
 library(caret)
 # not sure if we need to split the data for surveys but anyway i will put it here just in case 
 in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
-training.data <- recoded_data[in.train, ]
-testing.data <- recoded_data[-in.train, ]
+training.data <- recoded_data[in.train[,1], ]
+testing.data <- recoded_data[-in.train[,1], ]
+nrow(training.data)
+nrow(testing.data)
 ```
 
 ### Three binomial logistic models
@@ -478,7 +480,7 @@ confusionMatrix(predictions, recoded_data$qc19)
 
 model1 <- glm(qc19 ~ d11 + d70*polintr,
              data = recoded_data, family = binomial)
-model2 <- glm(qc19 ~ d11 + d70 + polintr, 
+model2 <- glm(qc19 ~ geo + sd3, 
              data = recoded_data, family = binomial)
 model3 <- glm(qc19 ~ geo + d70 -1,
               data = recoded_data, family = binomial)
@@ -488,8 +490,13 @@ model4 <- glm(qc19 ~ OBS_VALUE + d70 + age_group + polintr + as.factor(qa1),
 model5 <- glm(qc19 ~ OBS_VALUE*sd3,
               data = recoded_data, family = binomial)
 
+model7 <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, 
+              data = training.data, family = binomial
+  
+)
+
 stargazer::stargazer(model1, model2, model3, model4, type = "text")
-exp(model3$coefficients)
+exp(model7$coefficients)
 ```
 
 ```{r}
@@ -506,14 +513,14 @@ With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because t
 ```{r}
 
 threshold = 0.5 # set the threshold here 
-probabilities <- predict(model3, newdata = recoded_data, type = "response")
+probabilities <- predict(model7, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 
-confusionMatrix(predictions, recoded_data$qc19)
+confusionMatrix(predictions, testing.data$qc19)
 ```
 
 ```{r eval=true}
-roc <- pROC::roc(recoded_data$qc19, probabilities, na.rm = TRUE) 
+roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
 
@@ -527,7 +534,7 @@ predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 confusionMatrix(predictions, recoded_data$qc19)
 ```
 
-### Mixed models 
+### Mixed models
 
 ```{r}
 library(lme4)
@@ -553,21 +560,17 @@ mixed_model6 <- glmer(qc19 ~ d70 + qa1+ polintr + d72_1 + d72_2  + d10 +
               data = recoded_data, family = binomial
 )
 
+mixed_model7 <- glmer(qc19 ~ d70 + qa1 + d63 + (1|sd3) + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, data = recoded_data, family = binomial
+  
+)
 
 stargazer::stargazer(modelo, mixed_model4, mixed_model5, type = "text", model.names = T)
-summary(mixed_model6 )
-stargazer::stargazer(coef(mixed_model6)[1], type = "text")
+summary(mixed_model7 )
+stargazer::stargazer(confint.merMod(mixed_model7, method = "Wald"), type = "text")
 ```
 
 ```{r}
-coefficients <- lme4::fixef(mixed_model6)
-standard_deviations <- sqrt(diag(vcov(mixed_model6)))
 
-# Combine coefficients and standard deviations into a matrix
-model_summary <- cbind(coefficients, standard_deviations)
-
-# Display the coefficients and standard deviations using stargazer
-stargazer::stargazer(model_summary, type = "text", title = "mixed_model6")
 ```
 
 `mixed_model4` --
@@ -580,11 +583,25 @@ The results from the random effects show that the grouping variable *religion* h
 
 ```{r}
 library(sjPlot)
-sjPlot::plot_model(mixed_model5, type = "pred", 
-                   term = "OBS_VALUE [all]") +
-  theme_classic()
-sjPlot::plot_model(mixed_model4, type = "pred", terms =  "d10") +
-  labs(x = "gender")
+sjPlot::plot_model(model2, type = "pred", 
+                   terms =  "sd3", ci.lvl = 0.95) +
+  theme_classic() +
+  labs(
+    x = "Religion",
+    y = "Probability of Yes answer",
+    subtitle = "Given their nationality, Sikhs have largest range at 95% confidence level "
+  )
+
+
+sjPlot::plot_model(mixed_model7, type = "pred", 
+                   terms =  "sd1_7", ci.lvl = 0.95) +
+  theme_classic() +
+  labs(
+    x = "Do I know a trans person?",
+    y = "Probability of Yes answer",
+    subtitle = NULL
+  )
+
 ```
 
 #### Testing accuracy of mixed models
@@ -592,7 +609,7 @@ sjPlot::plot_model(mixed_model4, type = "pred", terms =  "d10") +
 ```{r}
 library(caret)
 threshold = 0.6 # set the threshold here 
-probabilities <- predict(mixed_model6, newdata = recoded_data, type = "response")
+probabilities <- predict(mixed_model7, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 
 confusionMatrix(predictions, recoded_data$qc19)
@@ -625,3 +642,27 @@ recoded_data |>
   group
 table(recoded_data$sd3, recoded_data$qc19, )
 ```
+
+## 
+
+-   variables used in model - alicia
+
+    -   why we picked them
+
+    -   imputation process
+
+-   descriptive analysis
+
+    -   charts
+
+-   explain the model and fixed effects of each parameter -giorgio
+
+-   predictive model -eric
+
+    -   random effect
+
+    -   accuracy, ROC curve, ...
+
+-   Conclusions! -eric
+
+    -   what were we most surprised by
