@@ -435,8 +435,10 @@ Here are the various predictor variables we have chosen to include in the models
 library(caret)
 # not sure if we need to split the data for surveys but anyway i will put it here just in case 
 in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
-training.data <- recoded_data[in.train, ]
-testing.data <- recoded_data[-in.train, ]
+training.data <- recoded_data[in.train[,1], ]
+testing.data <- recoded_data[-in.train[,1], ]
+nrow(training.data)
+nrow(testing.data)
 ```
 
 ### Three binomial logistic models
@@ -463,7 +465,7 @@ confusionMatrix(predictions, recoded_data$qc19)
 
 model1 <- glm(qc19 ~ d11 + d70*polintr,
              data = recoded_data, family = binomial)
-model2 <- glm(qc19 ~ d11 + d70 + polintr, 
+model2 <- glm(qc19 ~ geo + sd3, 
              data = recoded_data, family = binomial)
 model3 <- glm(qc19 ~ geo + d70 -1,
               data = recoded_data, family = binomial)
@@ -512,7 +514,7 @@ predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
 confusionMatrix(predictions, recoded_data$qc19)
 ```
 
-### Mixed models 
+### Mixed models
 
 ```{r}
 library(lme4)
@@ -537,6 +539,7 @@ mixed_model6 <- glmer(qc19 ~ d70 + qa1+ polintr + d72_1 + d72_2  + d10 +
                         know_transperson + d25 + d8 + d25 + (1|sd3) + (1|geo), 
               data = recoded_data, family = binomial
 )
+
 
 
 stargazer::stargazer(modelo, mixed_model4, mixed_model5, type = "text", model.names = T)
@@ -565,11 +568,23 @@ The results from the random effects show that the grouping variable *religion* h
 
 ```{r}
 library(sjPlot)
-sjPlot::plot_model(mixed_model5, type = "pred", 
-                   term = "OBS_VALUE [all]") +
-  theme_classic()
-sjPlot::plot_model(mixed_model4, type = "pred", terms =  "d10") +
-  labs(x = "gender")
+sjPlot::plot_model(model2, type = "pred", 
+                   terms =  "sd3", ci.lvl = 0.95) +
+  theme_classic() +
+  labs(
+    x = "Religion",
+    y = "Probability of Yes answer",
+    subtitle = "Given their nationality, Sikhs have largest range at 95% confidence level "
+  )
+sjPlot::plot_model(mixed_model6, type = "pred", 
+                   terms =  "know_transperson", ci.lvl = 0.95) +
+  theme_classic() +
+  labs(
+    x = "Do I know a trans person?",
+    y = "Probability of Yes answer",
+    subtitle = NULL
+  )
+
 ```
 
 #### Testing accuracy of mixed models
