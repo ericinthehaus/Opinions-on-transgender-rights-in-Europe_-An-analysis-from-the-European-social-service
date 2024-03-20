@@ -650,29 +650,35 @@ table(recoded_data$sd3, recoded_data$qc19, )
 ## Random forest
 
 ```{r rf}
+set.seed(1234)
 ctrl <- trainControl(method = "repeatedcv", 
                      number = 5,
                      classProbs = T,
                      summaryFunction=twoClassSummary,
                      verboseIter = T)
 
-# levels(training.data$qc19)=c("No","Yes")
-# levels(testing$Fail)=c("No","Yes")
-
-rfFit <- train(qc19 ~ ., 
+rfFit <- train(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
                   data = training.data,
                   method = "rf",   
                   preProc=c('scale','center'),
-                  tuneLength = 10,
+                  tuneLength = 5,
                   metric="ROC",
-                  trControl = ctrl)
+                  trControl = ctrl, 
+                  na.action = na.omit )
 plot(rfFit)
 
 rfProb = predict(rfFit, testing.data, type="prob")
 prediction <- as.factor(ifelse(rfProb$Yes > 0.6, "Yes", "No"))
 
-confusionMatrix(prediction, testing.data$qc19)$table
-confusionMatrix(prediction, testing.data$qc19)$overall[1:2]
+testing.data1 <- testing.data |> filter(!is.na(qc19))
+confusionMatrix(prediction, testing.data1$qc19) 
+
+rf_imp <- varImp(rfFit, scale = F)
+plot(rf_imp, scales = list(y = list(cex = .95)))
+
+library(pdp)
+partial(rfFit, pred.var = "d70", plot = TRUE, rug = TRUE)
+partial(rfFit, pred.var = "qc20", plot = TRUE, rug = TRUE)
 ```
 
 -   variables used in model - alicia
