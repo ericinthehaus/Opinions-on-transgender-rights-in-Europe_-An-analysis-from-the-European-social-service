@@ -1,10 +1,13 @@
 ---
-title: "Untitled"
+title: "Survey Methodology II - Final Project"
+author: "Eric Hausken, Alicia Talavera, Giorgio Rivoli"
 format: html
 editor: visual
 ---
 
-## Packages
+From 2012 to 2019, surveys were conducted at the European Union level focusing on aspects such as discrimination existing in the EU. In 2019, one of the questions was: *"Do you think that transgender people should be able to change their civil documents to match their inner gender identity?"* The objective of this work is to detect which variables influence whether an individual responds positively or negatively to this question.
+
+## Packages used
 
 ```{r}
 library(tidyverse)
@@ -18,23 +21,26 @@ library(caret)
 
 # Loading databases
 
-```{r}
+Our main database is the EU survey conducted in 2019. Then, we added some variables on country level. First, a GINI index database, which shows the value of the index for each country. Second, more specifically about LGBT+ rights in the EU countries, a database which includes data regarding whether a country has legal homosexual marriage, procedures for trans people name or legal sex change, hate crime laws, etc. This database is from ILGA-Europe and the Rainbow Europe Map and Index 2019.
 
+```{r}
 # Main database
 # data <- read_dta("ZA7575.dta")
 data <- read_dta("Data/ZA7575.dta")
+
+# GINI index database
+gini <- read_csv("eu_gini_coef.csv")
 
 # LGBTphobia database
 ilga <- read_xlsx("ilga.xlsx", sheet = 2)
 ilga <- ilga |> 
   filter(CONTINENT == "EUROPE")
 
-# GINI index database
-gini <- read_csv("eu_gini_coef.csv")
-
 ```
 
 ### Merging together Countries database
+
+Now, we merge both GINI and ILGA databases together to create a 'countries' database.
 
 ```{r}
 
@@ -68,6 +74,8 @@ countries <- countries |>
 ```
 
 ## Selecting variables in the main dataset
+
+There are over 600 columns in the original database, so we selected only a few that were relevant to the topic, as well as sociodemographic variables.
 
 ```{r}
 
@@ -134,7 +142,7 @@ selected_data <- selected_data |>
 
 ## Cleaning missing data
 
-Regarding missing data, we drop out some variables for having too many NAs and impute the rest.
+Regarding missing data, we drop out some variables for having too many NAs and impute the rest of varibles we will use. We decide not to impute the target variable to check how NAs distribution change.
 
 ```{r, fig.height=6, fig.width=12}
 
@@ -207,6 +215,8 @@ colSums(is.na(selected_data))
 
 ## Recode variables
 
+We recode many variables as factors and label them to be able to analyse them.
+
 ```{r}
 recoded_data <- selected_data |> 
   mutate(
@@ -254,7 +264,7 @@ recoded_data <- recoded_data |>
 
 ```
 
-## Descriptive
+## Descriptive analysis
 
 ### Individual characteristics
 
@@ -433,6 +443,8 @@ Here are the various predictor variables we have chosen to include in the models
 -   
 
 ### Split training/testing data
+
+We split our data into a training and testing set. The training set will get 70% of data. This will allow us to test our model accuracy later with 'new' data.
 
 ```{r splitting, eval=FALSE}
 library(caret)
@@ -669,7 +681,7 @@ table(recoded_data$sd3, recoded_data$qc19, )
 
     -   what were we most surprised by
 
-## Model 7 - Giorgio 
+## Model 7 - Giorgio
 
 ```{r}
 summary(model7)
@@ -677,8 +689,55 @@ roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE)
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
 
+exp(model7$coefficients)
 plot(roc, col='green', print.thres=TRUE)
 roc$levels
 
 confusionMatrix(predictions, testing.data$qc19)
+
 ```
+
+Now about three statements regarding LGBT equality:
+
+
+- qc5_1. Shared content online about discrimination incidents. People who have done this in the last 12 months seem to have a lower chance of supporting the target question. This might be related to supporting some other kinds of discrimination that aren't LGBT related.
+
+- qc5_3 - Joined an association or campaign agains discrimination. People who have joined an association in the last 12 months are 12% more likely to answer positively to the target question.
+
+- qc12_10r - How comfortable would you be with a gay, lesbian or bisexual coworker. When people answer they would be more comfortable, on a scale from 1 to 3, each 1 unit increase means a 8% increase in the chance of supporting trans people documentation change. This is the only variant of the question that was significant for the model.
+
+- qc15_1 - Gay, lesbian and bisexual people should have the same rights as heterosexual people. When people answer higher values in the scale (disagree, totally disagree, 1 unit increase in the variable) the probability of answering positively to the target question lowers by -27%.
+
+- qc15_2 - There's nothing wrong in same-sex relationships. As people answer more in disagree, the chance of supporting the target variable decreases.
+
+- qc15_3 - Same sex marriage should be allowed in Europe. This question is a scale. Each 1 unit increase in the scale (from totally agree to agree, to disagree and totally disagree) is a 10% increase on people answering negatively to the target question. However this one is the statement with less impact in the model.
+
+- qc17_2 - School should educate about ethnic origin or skin colour. The answers are in a scale (1: totally agree, 4: totally disagree). As people disagree more, there's a 14% decrease in the chance of them supporting trans people documentation change. 
+
+- qc17_5 - School should educate about being intersex. When people disagree more with this statement, the probability of supporting the target question decreases. 
+
+- qc20 - Believe that documents should have a third option for gender. When people answers no to that question, it's a 83% chance decrease in people being supportive of trans people changing their documents. 
+
+- d1 - Ideology. As people identify more to the right, the support decreases. 1 unit increase in the ideology scale is a 3% decrease in support for trans people changing their documentation.
+
+- d11- Age. As age increases, there's a slight increase in supportiveness. However in the descriptive analysis we saw how the oldest people were the less supportive. This might be due to people being more supportive in middle age but then decreasing in older ages.
+
+- qc2_recode - Experienced discrimination. People who have experienced discrimination is 13% less likely to be supportive. This might be due to discrimination linked to certain social groups who are less likely to be supportive. Discrimination for experiencing LGBTphobia specifically wasn't significant for the model. 
+
+- Legalised homosexual Marriage. Population from countries where there's legal homosexual marriage is slightly more likely to support trans people documentation change.
+
+- Hate Crime Laws. In countries where there are hate crime laws, it's a bit less likely for the population to be supportive.
+
+- Existence of gender recognition procedures. People who live in countries with these kind of laws are 27% less likely to support trans people. 
+
+These results might be becase many countries have these laws and it doesn't seem to be linked to the support of the population. 
+
+However, in countries with more progressive laws with have a focus and recognition of the problems trans people face, population seems to be more supportive:
+
+- No medical diagnosis needed. People who live in countries where trans people don't need medical diagnosis to follow certain procedures are 1.8 times more likely to be supportive.
+
+- Depathologisation laws. People who live in countries with specific dephatologisation laws towards transgender identities are 2.26 times more likely to answer positively to our target question than those who don't. However only 2 countries have these kind of laws in 2019.
+
+And lastly, for the GINI index:
+
+- OBS_VALUE - GINI index value. People who live in countries with a higher GINI index value are sllightly more likely to be supportive. Per each 1 unit increase in the index value, someone is 1% more likely to support trans people changing their documentation.
