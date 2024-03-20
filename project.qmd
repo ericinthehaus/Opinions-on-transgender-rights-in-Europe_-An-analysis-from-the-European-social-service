@@ -436,7 +436,7 @@ Here are the various predictor variables we have chosen to include in the models
 
 ```{r splitting, eval=TRUE}
 library(caret)
-# not sure if we need to split the data for surveys but anyway i will put it here just in case 
+set.seed(1234)
 in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
 training.data <- recoded_data[in.train[,1], ]
 testing.data <- recoded_data[-in.train[,1], ]
@@ -481,60 +481,16 @@ confusionMatrix(predictions, testing.data$qc19)
 
 ```{r models}
 
-model1 <- glm(qc19 ~ d11 + d70*polintr,
+model1 <- glm(qc19 ~ d11 + d70,
              data = recoded_data, family = binomial)
 model2 <- glm(qc19 ~ geo + sd3, 
              data = recoded_data, family = binomial)
-model3 <- glm(qc19 ~ geo + d70 -1,
-              data = recoded_data, family = binomial)
-model4 <- glm(qc19 ~ OBS_VALUE + d70 + age_group + polintr + as.factor(qa1),
-              data = recoded_data, family = binomial)
-
-model5 <- glm(qc19 ~ OBS_VALUE*sd3,
-              data = recoded_data, family = binomial)
-
 model7 <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, 
               data = training.data, family = binomial
   
 )
 
-stargazer::stargazer(model1, model2, model3, model4, type = "text")
-exp(model7$coefficients)
-```
-
-```{r}
-new.data <- data.frame(d11 = c(20, 30, 40),
-                       d70 = c("Very", "Very", "Very"),
-                       polintr = c("frequently", "frequently", "frequently"))
-predict.glm(model1, newdata = new.data, type = "response")
-```
-
-### Testing accuracy of non-mixed effects models
-
-With the threshold set at 50%, accuracy is only OK. Sensitivity is bad because there are lots of false positives. Most of the real "No"s are predicted as "Yes."
-
-```{r}
-
-threshold = 0.5 # set the threshold here 
-probabilities <- predict(model7, newdata = testing.data, type = "response")
-predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
-
-confusionMatrix(predictions, testing.data$qc19)
-```
-
-```{r eval=true}
-roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
-sens <- roc$sensitivities #include sensitivities in test data
-spec <- roc$specificities
-
-plot(roc, col='green', print.thres=TRUE)
-roc$levels
-
-threshold = .577 # set the threshold here 
-probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response")
-predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
-
-confusionMatrix(predictions, recoded_data$qc19)
+stargazer::stargazer(model1, model2, model7, type = "text")
 ```
 
 ### Mixed models
