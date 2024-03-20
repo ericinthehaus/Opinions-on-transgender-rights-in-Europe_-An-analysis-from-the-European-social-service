@@ -444,10 +444,9 @@ Here are the various predictor variables we have chosen to include in the models
 
     -   Globalization is benefitting me "a lot," "somewhat," "not really," or "nor at all"
 
--   
-
 ### Split training/testing data
 
+We split our data into a training and testing set. The training set will get 70% of data. This will allow us to test our model accuracy later with 'new' data.
 
 ```{r splitting, eval=TRUE}
 library(caret)
@@ -459,13 +458,11 @@ nrow(training.data)
 nrow(testing.data)
 ```
 
-### Three binomial logistic models
+### Binomial logistic models
 
-According to all 3 models below, **life satisfaction** has a strong effect on an individual's opinion about transgender rights. The model results show that respondents who said that they are "not very" and "not at all" satisfied with their life are much more likely to answer "No" to the question about giving transgender people the right to change their civil documents. The coefficients show that both negative responses have a similar effect on the odds that they will answer Yes/No. Respondents who answered "somewhat satisfied" are also more likely to answer "No" but not by much.
+According to the models below, **life satisfaction** has a strong effect on an individual's opinion about transgender rights. The model results show that respondents who said that they are "not very" and "not at all" satisfied with their life are much more likely to answer "No" to the question about giving transgender people the right to change their civil documents. The coefficients show that both negative responses have a similar effect on the odds that they will answer Yes/No. Respondents who answered "somewhat satisfied" are also more likely to answer "No" but not by much.
 
 Other predictors **Age**, **Political Interest**, and **Country** also show a strong effect on the outcome.
-
-testing
 
 Including all our variables into the model, we observe many aren't significant. We reduce the variables until we select only those which are.
 
@@ -479,20 +476,6 @@ predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
 confusionMatrix(predictions, recoded_data$qc19)
 ```
 
-In model we only keep the variables which are significative. From the variable qc9, the only
-```{r}
-modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
-              data = training.data, family = binomial)
-
-summary(modelo)
-
-threshold = 0.5 # set the threshold here 
-probabilities <- predict(modelo, newdata = testing.data, type = "response")
-predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
-confusionMatrix(predictions, testing.data$qc19)
-
-```
-
 ```{r models}
 
 model1 <- glm(qc19 ~ d11 + d70,
@@ -501,37 +484,7 @@ model2 <- glm(qc19 ~ geo + sd3,
              data = recoded_data, family = binomial)
 model7 <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, 
               data = training.data, family = binomial
-  
 )
-
-stargazer::stargazer(model1, model2, model7, type = "text")
-```
-
-```{r}
-modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
-              data = training.data, family = binomial)
-
-summary(modelo)
-
-threshold = 0.5 # set the threshold here 
-probabilities <- predict(modelo, newdata = testing.data, type = "response")
-predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
-confusionMatrix(predictions, testing.data$qc19)
-
-```
-
-```{r models}
-
-model1 <- glm(qc19 ~ d11 + d70,
-             data = recoded_data, family = binomial)
-model2 <- glm(qc19 ~ geo + sd3, 
-             data = recoded_data, family = binomial)
-model7 <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, 
-              data = training.data, family = binomial
-  
-)
-
-stargazer::stargazer(model1, model2, model7, type = "text")
 ```
 
 ### Mixed models
@@ -539,19 +492,6 @@ stargazer::stargazer(model1, model2, model7, type = "text")
 ```{r}
 library(lme4)
 
-mixed_model1 <- glmer(qc19 ~ d11 + d70*polintr + (1|geo) ,
-             data = recoded_data, family = binomial,
-             )
-mixed_model2 <- glmer(qc19 ~ d11 + d70 + polintr+ (1|geo), 
-             data = recoded_data, family = binomial)
-mixed_model3 <- glmer(qc19 ~ d70 + (1|geo),
-              data = recoded_data, family = binomial)
-mixed_model4 <- glmer(qc19 ~ d70 + (OBS_VALUE|sd3) +
-                        polintr + qa1 + (d11|geo) + d10,
-              data = recoded_data, family = binomial)
-
-mixed_model5 <- glmer(qc19 ~ d10 + OBS_VALUE + (OBS_VALUE|sd3),
-              data = recoded_data, family = binomial)
 # reversing the order of levels for knowing a trans person. No is base.
 recoded_data$know_transperson <- factor(recoded_data$sd1_7, levels = c("No", "Yes") )
 levels(recoded_data$know_transperson)
@@ -560,31 +500,15 @@ mixed_model6 <- glmer(qc19 ~ d70 + qa1+ polintr + d72_1 + d72_2  + d10 +
               data = recoded_data, family = binomial
 )
 
-mixed_model7 <- glmer(qc19 ~ d70 + qa1 + d63 + (1|sd3) + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, 
-                      data = training.data, family = binomial
-  
-)
 
-stargazer::stargazer(modelo, mixed_model4, mixed_model5, type = "text", model.names = T)
-summary(mixed_model7 )
-stargazer::stargazer(confint.merMod(mixed_model7, method = "Wald"), type = "text")
+stargazer::stargazer(model1, model2, model7, mixed_model6, type = "text", model.names = T)
 ```
 
-```{r}
-
-```
-
-`mixed_model4` --
-
-The 4th mixed model shows life satisfaction, political interest, sex, and opinion on globalization all have an effect on the outcome. The coefficient estimate for Intercept is not significant, probably because of the random effects in the model. Also, the life satisfaction factor variable for somewhat satisfied does not have a significant coefficient, indicating that given the other variables in the model, people who are somewhat satisfied with life have similar a response to those who are very satisfied. Very satisfied is the base value for this variable.
-
-The results from the random effects show that the grouping variable *religion* has an effect on the intercept but only a minor effect on the slope for country-level income inequality. In other words, Atheists are much more likely to say "yes" for the outcome variable than other religious assocations. In countries that are more unequal, they are less likely than in countries that are more equal financially. But that slope is very small. For an increase of one Gini "score," the decline in odds of saying "yes" is only 0.9 percent. On the other hand, Sunni Muslims are much *less* likely to say "yes" than the average.
-
-#### Visualizing the mixed models
+#### Visualizing the model
 
 ```{r}
 library(sjPlot)
-sjPlot::plot_model(model2, type = "pred", 
+sjPlot::plot_model(modelo, type = "pred", 
                    terms =  "sd3", ci.lvl = 0.95) +
   theme_classic() +
   labs(
@@ -592,65 +516,97 @@ sjPlot::plot_model(model2, type = "pred",
     y = "Probability of Yes answer",
     subtitle = "Given their nationality, Sikhs have largest range at 95% confidence level "
   )
-
-
-sjPlot::plot_model(mixed_model7, type = "pred", 
-                   terms =  "sd1_7", ci.lvl = 0.95) +
-  theme_classic() +
-  labs(
-    x = "Do I know a trans person?",
-    y = "Probability of Yes answer",
-    subtitle = NULL
-  )
-
 ```
 
-#### Testing accuracy of mixed models
+## Modelo
 
 ```{r}
-library(caret)
-threshold = 0.5 # set the threshold here 
-probabilities <- predict(mixed_model7, newdata = testing.data, type = "response")
+modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
+              data = training.data, family = binomial)
+
+stargazer::stargazer(modelo, type = "text")
+
+summary(modelo)
+threshold = 0.6 # set the threshold here 
+probabilities <- predict(modelo, newdata = testing.data, type = "response")
 predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
-
-confusionMatrix(predictions, testing.data$qc19)
-```
-
-```{r}
-roc <- pROC::roc(recoded_data$qc19, probabilities, na.rm = TRUE) 
+roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
 sens <- roc$sensitivities #include sensitivities in test data
 spec <- roc$specificities
 
+exp(modelo$coefficients)
 plot(roc, col='green', print.thres=TRUE)
 roc$levels
 
-threshold = .577 # set the threshold here 
-probabilities <- predict(mixed_model4, newdata = recoded_data, type = "response")
-predictions <- as.factor(ifelse(probabilities > threshold, "Yes", "No"))
+confusionMatrix(predictions, testing.data$qc19)
 
-confusionMatrix(predictions, recoded_data$qc19)
 ```
 
-```{r}
-cor.test((as.numeric(recoded_data$qc19)-1),recoded_data$OBS_VALUE)
+-   d70 - Life Satisfaction: From the summary, the relevance of the "not very" and "not at all" satisfaction levels is clearly evident. Specifically, those who reported being "not very" satisfied with their life show a 28% lower likelihood of supporting transgender individuals changing their documents compared to those who are very satisfied. This disparity further increases for those who are "not at all" satisfied with their life, with a 38% discrepancy compared to those who are completely satisfied. This result supports the hypothesis that individuals who are less satisfied with their life may exhibit greater hostility towards their surroundings, potentially influencing their inclination to support rights for individuals perceived as different from themselves.
 
-recoded_data |>
-  filter(!is.na(qc19)) |> 
-  ggplot(aes(x = OBS_VALUE, y = sd3, size = qc19)) +
-  geom_point()
+-   d63 - Social Class: Speaking about social stratification, we observe that only the highest level of social class appears to be significant. Specifically, it seems that the uppermost segment of the social scale is 2.24 times more supportive of transgender individuals changing their documents compared to the working class. These findings are not surprising, as higher social classes are often associated with higher levels of education and culture, which may make them more open and inclined to support civil rights.
 
-recoded_data |> 
-  group
-table(recoded_data$sd3, recoded_data$qc19, )
-```
+-   sd3 - Religion: Now let's consider religion. In this case, we see very different results. Indeed, we notice that being Protestant, atheist, or agnostic entails greater consensus in favor of the possibility for transgender individuals to change their identity on documents. Conversely, those who adhere to religions considered more conservative, such as Orthodox Christians and particularly Sunni Muslims, are less supportive of endorsing this type of right.
+
+-   sd1_7 - Having friends or acquaintances who are transgender: Similarly, these results appear quite logical. Individuals who do not have any transgender friends or acquaintances are approximately 25% less likely to support the change of identity on transgender individuals' documents. Indeed, lacking direct, firsthand contact with transgender individuals may lead to underestimating the importance of this need and not perceiving it as an urgent issue.
+
+-   d8 - Education: In this case as well, much like we observed for social class, higher education appears to be positively associated with greater support. In fact, each additional year spent in full-time education increases the likelihood of supporting the right in question by 1%.
+
+-   qc1 - Discrimination: Regarding the perception of discrimination in one's own country, the results seem to be somewhat conflicting and, consequently, surprising. In fact, it appears that regarding discrimination related to sexual orientation, the more rare such discrimination is perceived to be, the less support there is for this right for transgender individuals. However, when it comes to discrimination against transgender people, the more this discrimination is perceived as rare, the greater the support for this right.
+
+-   qc6 - Having a person from certain groups in the highest elected political position: In this case, the results become entirely logical. Indeed, we notice that the more comfortable one feels with having gay, lesbian, or bisexual individuals in top political positions, the greater the support for the right to change identity on transgender individuals' documents (increasing by approximately 28%). The same applies to groups of individuals belonging to minority ethnicities (in this case, the percentage is about 9%). As for having transgender individuals in top political roles, although with a not too high p-value, we can state that feeling more comfortable with these individuals in leadership positions leads to an increased support of about 6% for the aforementioned right.
+
+-   qc5_1. Shared content online about discrimination incidents. People who have done this in the last 12 months seem to have a lower chance of supporting the target question. This might be related to supporting some other kinds of discrimination that aren't LGBT related.
+
+-   qc5_3 - Joined an association or campaign agains discrimination. People who have joined an association in the last 12 months are 12% more likely to answer positively to the target question.
+
+-   qc12_10r - How comfortable would you be with a gay, lesbian or bisexual coworker. When people answer they would be more comfortable, on a scale from 1 to 3, each 1 unit increase means a 8% increase in the chance of supporting trans people documentation change. This is the only variant of the question that was significant for the model.
+
+Now about three statements regarding LGBT equality:
+
+-   qc15_1 - Gay, lesbian and bisexual people should have the same rights as heterosexual people. When people answer higher values in the scale (disagree, totally disagree, 1 unit increase in the variable) the probability of answering positively to the target question lowers by -27%.
+
+-   qc15_2 - There's nothing wrong in same-sex relationships. As people answer more in disagree, the chance of supporting the target variable decreases.
+
+-   qc15_3 - Same sex marriage should be allowed in Europe. This question is a scale. Each 1 unit increase in the scale (from totally agree to agree, to disagree and totally disagree) is a 10% increase on people answering negatively to the target question. However this one is the statement with less impact in the model.
+
+-   qc17_2 - School should educate about ethnic origin or skin colour. The answers are in a scale (1: totally agree, 4: totally disagree). As people disagree more, there's a 14% decrease in the chance of them supporting trans people documentation change.
+
+-   qc17_5 - School should educate about being intersex. When people disagree more with this statement, the probability of supporting the target question decreases.
+
+-   qc20 - Believe that documents should have a third option for gender. When people answers no to that question, it's a 83% chance decrease in people being supportive of trans people changing their documents.
+
+-   d1 - Ideology. As people identify more to the right, the support decreases. 1 unit increase in the ideology scale is a 3% decrease in support for trans people changing their documentation.
+
+-   d11- Age. As age increases, there's a slight increase in supportiveness. However in the descriptive analysis we saw how the oldest people were the less supportive. This might be due to people being more supportive in middle age but then decreasing in older ages.
+
+-   qc2_recode - Experienced discrimination. People who have experienced discrimination is 13% less likely to be supportive. This might be due to discrimination linked to certain social groups who are less likely to be supportive. Discrimination for experiencing LGBTphobia specifically wasn't significant for the model.
+
+-   Legalised homosexual Marriage. Population from countries where there's legal homosexual marriage is slightly more likely to support trans people documentation change.
+
+-   Hate Crime Laws. In countries where there are hate crime laws, it's a bit less likely for the population to be supportive.
+
+-   Existence of gender recognition procedures. People who live in countries with these kind of laws are 27% less likely to support trans people.
+
+These results might be becase many countries have these laws and it doesn't seem to be linked to the support of the population.
+
+However, in countries with more progressive laws with have a focus and recognition of the problems trans people face, population seems to be more supportive:
+
+-   No medical diagnosis needed. People who live in countries where trans people don't need medical diagnosis to follow certain procedures are 1.8 times more likely to be supportive.
+
+-   Depathologisation laws. People who live in countries with specific dephatologisation laws towards transgender identities are 2.26 times more likely to answer positively to our target question than those who don't. However only 2 countries have these kind of laws in 2019.
+
+And lastly, for the GINI index:
+
+-   OBS_VALUE - GINI index value. People who live in countries with a higher GINI index value are sllightly more likely to be supportive. Per each 1 unit increase in the index value, someone is 1% more likely to support trans people changing their documentation.
 
 ## Random forest
 
-The random forest model below shows a fair predictive accuracy but not much better than random chance. The accuracy when compared with the testing data was only 67%. Due to it's low accuracy rate and the difficulty in interpretation, we have decided that the best model for prediction is the logistic model. 
+The random forest model below shows a fair predictive accuracy but not much better than random chance. The accuracy when compared with the testing data was only 67%. Due to it's low accuracy rate and the difficulty in interpretation, we have decided that the best model for prediction is the logistic model.
 
-According to this random forest model, the most important variable is whether someone believes that there should be a third option on passports and birth certificates besides Male and Female. Second most important was whether someone agrees with the statement: "Same sex marriges should be allowed in Europe." Age also appears to be important. 
+According to this random forest model, the most important variable is whether someone believes that there should be a third option on passports and birth certificates besides Male and Female. Second most important was whether someone agrees with the statement: "Same sex marriges should be allowed in Europe." Age also appears to be important.
 
-In contrast to the logistic model, some variables are not considered important. Knowing someone who is transgender is not considered important for random forest. Neither are religion and life satisfaction. 
+In contrast to the logistic model, some variables are not considered important. Knowing someone who is transgender is not considered important for random forest. Neither are religion and life satisfaction.
 
 ```{r rf}
 set.seed(1234)
@@ -681,108 +637,6 @@ plot(rf_imp, scales = list(y = list(cex = .95)))
 library(pdp)
 partial(rfFit, pred.var = "qc15_3", plot = TRUE, rug = TRUE)
 partial(rfFit, pred.var = "qc20", plot = TRUE, rug = TRUE)
-partial(rfFit, pred.var = "d11", plot = TRUE, rug = TRUE)
 ```
 
-
-
--   variables used in model - alicia
-
-    -   why we picked them
-
-    -   imputation process
-
--   descriptive analysis
-
-    -   charts
-
--   explain the model and fixed effects of each parameter -giorgio
-
--   predictive model -eric
-
-    -   random effect
-
-    -   accuracy, ROC curve, ...
-
--   Conclusions! -eric
-
-    -   what were we most surprised by
-
-## Model 7 - Giorgio
-
-```{r}
-modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
-              data = training.data, family = binomial)
-
-
-
-summary(modelo)
-roc <- pROC::roc(testing.data$qc19, probabilities, na.rm = TRUE) 
-sens <- roc$sensitivities #include sensitivities in test data
-spec <- roc$specificities
-
-exp(model7$coefficients)
-plot(roc, col='green', print.thres=TRUE)
-roc$levels
-
-confusionMatrix(predictions, testing.data$qc19)
-
-```
-
-- d70 - Life Satisfaction: From the summary, the relevance of the "not very" and "not at all" satisfaction levels is clearly evident. Specifically, those who reported being "not very" satisfied with their life show a 28% lower likelihood of supporting transgender individuals changing their documents compared to those who are very satisfied. This disparity further increases for those who are "not at all" satisfied with their life, with a 38% discrepancy compared to those who are completely satisfied. This result supports the hypothesis that individuals who are less satisfied with their life may exhibit greater hostility towards their surroundings, potentially influencing their inclination to support rights for individuals perceived as different from themselves.
-
-- d63 - Social Class: Speaking about social stratification, we observe that only the highest level of social class appears to be significant. Specifically, it seems that the uppermost segment of the social scale is 2.24 times more supportive of transgender individuals changing their documents compared to the working class. These findings are not surprising, as higher social classes are often associated with higher levels of education and culture, which may make them more open and inclined to support civil rights.
-
-- sd3 - Religion: Now let's consider religion. In this case, we see very different results. Indeed, we notice that being Protestant, atheist, or agnostic entails greater consensus in favor of the possibility for transgender individuals to change their identity on documents. Conversely, those who adhere to religions considered more conservative, such as Orthodox Christians and particularly Sunni Muslims, are less supportive of endorsing this type of right.
-
-- sd1_7 - Having friends or acquaintances who are transgender: Similarly, these results appear quite logical. Individuals who do not have any transgender friends or acquaintances are approximately 25% less likely to support the change of identity on transgender individuals' documents. Indeed, lacking direct, firsthand contact with transgender individuals may lead to underestimating the importance of this need and not perceiving it as an urgent issue.
-
-- d8 - Education: In this case as well, much like we observed for social class, higher education appears to be positively associated with greater support. In fact, each additional year spent in full-time education increases the likelihood of supporting the right in question by 1%.
-
-- qc1 - Discrimination: Regarding the perception of discrimination in one's own country, the results seem to be somewhat conflicting and, consequently, surprising. In fact, it appears that regarding discrimination related to sexual orientation, the more rare such discrimination is perceived to be, the less support there is for this right for transgender individuals. However, when it comes to discrimination against transgender people, the more this discrimination is perceived as rare, the greater the support for this right.
-
-- qc6 - Having a person from certain groups in the highest elected political position: In this case, the results become entirely logical. Indeed, we notice that the more comfortable one feels with having gay, lesbian, or bisexual individuals in top political positions, the greater the support for the right to change identity on transgender individuals' documents (increasing by approximately 28%). The same applies to groups of individuals belonging to minority ethnicities (in this case, the percentage is about 9%). As for having transgender individuals in top political roles, although with a not too high p-value, we can state that feeling more comfortable with these individuals in leadership positions leads to an increased support of about 6% for the aforementioned right.
-
-- qc5_1. Shared content online about discrimination incidents. People who have done this in the last 12 months seem to have a lower chance of supporting the target question. This might be related to supporting some other kinds of discrimination that aren't LGBT related.
-
-- qc5_3 - Joined an association or campaign agains discrimination. People who have joined an association in the last 12 months are 12% more likely to answer positively to the target question.
-
-- qc12_10r - How comfortable would you be with a gay, lesbian or bisexual coworker. When people answer they would be more comfortable, on a scale from 1 to 3, each 1 unit increase means a 8% increase in the chance of supporting trans people documentation change. This is the only variant of the question that was significant for the model.
-
-Now about three statements regarding LGBT equality:
-
-- qc15_1 - Gay, lesbian and bisexual people should have the same rights as heterosexual people. When people answer higher values in the scale (disagree, totally disagree, 1 unit increase in the variable) the probability of answering positively to the target question lowers by -27%.
-
-- qc15_2 - There's nothing wrong in same-sex relationships. As people answer more in disagree, the chance of supporting the target variable decreases.
-
-- qc15_3 - Same sex marriage should be allowed in Europe. This question is a scale. Each 1 unit increase in the scale (from totally agree to agree, to disagree and totally disagree) is a 10% increase on people answering negatively to the target question. However this one is the statement with less impact in the model.
-
-- qc17_2 - School should educate about ethnic origin or skin colour. The answers are in a scale (1: totally agree, 4: totally disagree). As people disagree more, there's a 14% decrease in the chance of them supporting trans people documentation change. 
-
-- qc17_5 - School should educate about being intersex. When people disagree more with this statement, the probability of supporting the target question decreases. 
-
-- qc20 - Believe that documents should have a third option for gender. When people answers no to that question, it's a 83% chance decrease in people being supportive of trans people changing their documents. 
-
-- d1 - Ideology. As people identify more to the right, the support decreases. 1 unit increase in the ideology scale is a 3% decrease in support for trans people changing their documentation.
-
-- d11- Age. As age increases, there's a slight increase in supportiveness. However in the descriptive analysis we saw how the oldest people were the less supportive. This might be due to people being more supportive in middle age but then decreasing in older ages.
-
-- qc2_recode - Experienced discrimination. People who have experienced discrimination is 13% less likely to be supportive. This might be due to discrimination linked to certain social groups who are less likely to be supportive. Discrimination for experiencing LGBTphobia specifically wasn't significant for the model. 
-
-- Legalised homosexual Marriage. Population from countries where there's legal homosexual marriage is slightly more likely to support trans people documentation change.
-
-- Hate Crime Laws. In countries where there are hate crime laws, it's a bit less likely for the population to be supportive.
-
-- Existence of gender recognition procedures. People who live in countries with these kind of laws are 27% less likely to support trans people. 
-
-These results might be becase many countries have these laws and it doesn't seem to be linked to the support of the population. 
-
-However, in countries with more progressive laws with have a focus and recognition of the problems trans people face, population seems to be more supportive:
-
-- No medical diagnosis needed. People who live in countries where trans people don't need medical diagnosis to follow certain procedures are 1.8 times more likely to be supportive.
-
-- Depathologisation laws. People who live in countries with specific dephatologisation laws towards transgender identities are 2.26 times more likely to answer positively to our target question than those who don't. However only 2 countries have these kind of laws in 2019.
-
-And lastly, for the GINI index:
-
-- OBS_VALUE - GINI index value. People who live in countries with a higher GINI index value are sllightly more likely to be supportive. Per each 1 unit increase in the index value, someone is 1% more likely to support trans people changing their documentation.
+\
