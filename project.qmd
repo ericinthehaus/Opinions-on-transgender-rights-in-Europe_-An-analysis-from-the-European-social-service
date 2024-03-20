@@ -649,6 +649,12 @@ table(recoded_data$sd3, recoded_data$qc19, )
 
 ## Random forest
 
+The random forest model below shows a fair predictive accuracy but not much better than random chance. The accuracy when compared with the testing data was only 67%. Due to it's low accuracy rate and the difficulty in interpretation, we have decided that the best model for prediction is the logistic model. 
+
+According to this random forest model, the most important variable is whether someone believes that there should be a third option on passports and birth certificates besides Male and Female. Second most important was whether someone agrees with the statement: "Same sex marriges should be allowed in Europe." Age also appears to be important. 
+
+In contrast to the logistic model, some variables are not considered important. Knowing someone who is transgender is not considered important for random forest. Neither are religion and life satisfaction. 
+
 ```{r rf}
 set.seed(1234)
 ctrl <- trainControl(method = "repeatedcv", 
@@ -657,7 +663,7 @@ ctrl <- trainControl(method = "repeatedcv",
                      summaryFunction=twoClassSummary,
                      verboseIter = T)
 
-rfFit <- train(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
+rfFit <- train(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d10 + qc2_recode +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
                   data = training.data,
                   method = "rf",   
                   preProc=c('scale','center'),
@@ -665,21 +671,23 @@ rfFit <- train(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1
                   metric="ROC",
                   trControl = ctrl, 
                   na.action = na.omit )
-plot(rfFit)
 
 rfProb = predict(rfFit, testing.data, type="prob")
-prediction <- as.factor(ifelse(rfProb$Yes > 0.6, "Yes", "No"))
+prediction <- as.factor(ifelse(rfProb$Yes > 0.4, "Yes", "No"))
 
-testing.data1 <- testing.data |> filter(!is.na(qc19))
-confusionMatrix(prediction, testing.data1$qc19) 
+testing.data1 <- testing.data[row_number(rfProb),]
+confusionMatrix(testing.data1$qc19, prediction) 
 
-rf_imp <- varImp(rfFit, scale = F)
+rf_imp <- varImp(rfFit, scale = T)
 plot(rf_imp, scales = list(y = list(cex = .95)))
 
 library(pdp)
-partial(rfFit, pred.var = "d70", plot = TRUE, rug = TRUE)
+partial(rfFit, pred.var = "qc15_3", plot = TRUE, rug = TRUE)
 partial(rfFit, pred.var = "qc20", plot = TRUE, rug = TRUE)
+partial(rfFit, pred.var = "d11", plot = TRUE, rug = TRUE)
 ```
+
+
 
 -   variables used in model - alicia
 
