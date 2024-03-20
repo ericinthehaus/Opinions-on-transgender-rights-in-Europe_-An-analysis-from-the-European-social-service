@@ -185,6 +185,10 @@ imputed_data <- imputed_data |> select("d70", "qa1", "polintr", "d63", "d72_1", 
 
 set.seed(123)
 
+meth <- rep("rf", 40)
+
+meth[c("d70", "qa1", "polintr", "d63", "d72_1", "d72_2", "sd3", "sd1_7", "d25", "d8", "qc1_4", "qc1_8", "qc6_1r", "qc6_2r","qc6_3r", "qc6_10r", "qc7", "qc9_1", "qc9_4", "qc9_5","qc9_10", "qc5_1", "qc5_3", "qc12_1r", "qc12_2r", "qc12_6r", "qc12_10r", "qc12_11r", "qc15_1", "qc15_2", "qc15_3", "qc17_1", "qc17_2", "qc17_3", "qc17_3", "qc17_5", "qc18_1r", "qc18_2r", "qc18_3r", "qc20", "d1")] <- "rf"
+
 init = mice(imputed_data)
 meth = init$method
 
@@ -465,6 +469,32 @@ confusionMatrix(predictions, recoded_data$qc19)
 ```
 
 In model we only keep the variables which are significative. From the variable qc9, the only
+```{r}
+modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
+              data = training.data, family = binomial)
+
+summary(modelo)
+
+threshold = 0.5 # set the threshold here 
+probabilities <- predict(modelo, newdata = testing.data, type = "response")
+predictions <- as.factor(ifelse(probabilities >= threshold, "Yes", "No"))
+confusionMatrix(predictions, testing.data$qc19)
+
+```
+
+```{r models}
+
+model1 <- glm(qc19 ~ d11 + d70,
+             data = recoded_data, family = binomial)
+model2 <- glm(qc19 ~ geo + sd3, 
+             data = recoded_data, family = binomial)
+model7 <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc5_3 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11  + qc2_recode + + Marriage + `Hate Crime Laws` + `Existence of gender recogition administrative procedures` + `No medical diag0sis needed` + Depathologisation + OBS_VALUE, 
+              data = training.data, family = binomial
+  
+)
+
+stargazer::stargazer(model1, model2, model7, type = "text")
+```
 
 ```{r}
 modelo <- glm(qc19 ~ d70 + qa1 + d63 + sd3 + sd1_7 + d8 + qc1_4 + qc1_8 + qc6_1r + qc6_2r + qc6_3r + qc6_10r + qc7 + qc9_1 + qc5_1 + qc12_10r + qc15_1 + qc15_2 + qc15_3 + qc17_2  + qc17_5 + qc20 + d1 + d11 + d8 + d10 + qc2_recode + sd1_7 +  `Hate Crime Laws` +  `Existence of gender recogition administrative procedures`+ `No medical diag0sis needed` +  `Depathologisation` + OBS_VALUE, 
