@@ -697,14 +697,27 @@ confusionMatrix(predictions, testing.data$qc19)
 
 ```
 
-Now about three statements regarding LGBT equality:
+- d70 - Life Satisfaction: From the summary, the relevance of the "not very" and "not at all" satisfaction levels is clearly evident. Specifically, those who reported being "not very" satisfied with their life show a 28% lower likelihood of supporting transgender individuals changing their documents compared to those who are very satisfied. This disparity further increases for those who are "not at all" satisfied with their life, with a 38% discrepancy compared to those who are completely satisfied. This result supports the hypothesis that individuals who are less satisfied with their life may exhibit greater hostility towards their surroundings, potentially influencing their inclination to support rights for individuals perceived as different from themselves.
 
+- d63 - Social Class: Speaking about social stratification, we observe that only the highest level of social class appears to be significant. Specifically, it seems that the uppermost segment of the social scale is 2.24 times more supportive of transgender individuals changing their documents compared to the working class. These findings are not surprising, as higher social classes are often associated with higher levels of education and culture, which may make them more open and inclined to support civil rights.
+
+- sd3 - Religion: Now let's consider religion. In this case, we see very different results. Indeed, we notice that being Protestant, atheist, or agnostic entails greater consensus in favor of the possibility for transgender individuals to change their identity on documents. Conversely, those who adhere to religions considered more conservative, such as Orthodox Christians and particularly Sunni Muslims, are less supportive of endorsing this type of right.
+
+- sd1_7 - Having friends or acquaintances who are transgender: Similarly, these results appear quite logical. Individuals who do not have any transgender friends or acquaintances are approximately 25% less likely to support the change of identity on transgender individuals' documents. Indeed, lacking direct, firsthand contact with transgender individuals may lead to underestimating the importance of this need and not perceiving it as an urgent issue.
+
+- d8 - Education: In this case as well, much like we observed for social class, higher education appears to be positively associated with greater support. In fact, each additional year spent in full-time education increases the likelihood of supporting the right in question by 1%.
+
+- qc1 - Discrimination: Regarding the perception of discrimination in one's own country, the results seem to be somewhat conflicting and, consequently, surprising. In fact, it appears that regarding discrimination related to sexual orientation, the more rare such discrimination is perceived to be, the less support there is for this right for transgender individuals. However, when it comes to discrimination against transgender people, the more this discrimination is perceived as rare, the greater the support for this right.
+
+- qc6 - Having a person from certain groups in the highest elected political position: In this case, the results become entirely logical. Indeed, we notice that the more comfortable one feels with having gay, lesbian, or bisexual individuals in top political positions, the greater the support for the right to change identity on transgender individuals' documents (increasing by approximately 28%). The same applies to groups of individuals belonging to minority ethnicities (in this case, the percentage is about 9%). As for having transgender individuals in top political roles, although with a not too high p-value, we can state that feeling more comfortable with these individuals in leadership positions leads to an increased support of about 6% for the aforementioned right.
 
 - qc5_1. Shared content online about discrimination incidents. People who have done this in the last 12 months seem to have a lower chance of supporting the target question. This might be related to supporting some other kinds of discrimination that aren't LGBT related.
 
 - qc5_3 - Joined an association or campaign agains discrimination. People who have joined an association in the last 12 months are 12% more likely to answer positively to the target question.
 
 - qc12_10r - How comfortable would you be with a gay, lesbian or bisexual coworker. When people answer they would be more comfortable, on a scale from 1 to 3, each 1 unit increase means a 8% increase in the chance of supporting trans people documentation change. This is the only variant of the question that was significant for the model.
+
+Now about three statements regarding LGBT equality:
 
 - qc15_1 - Gay, lesbian and bisexual people should have the same rights as heterosexual people. When people answer higher values in the scale (disagree, totally disagree, 1 unit increase in the variable) the probability of answering positively to the target question lowers by -27%.
 
