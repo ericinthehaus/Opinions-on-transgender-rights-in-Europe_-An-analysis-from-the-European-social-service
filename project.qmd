@@ -433,7 +433,7 @@ Here are the various predictor variables we have chosen to include in the models
 
 ### Split training/testing data
 
-```{r splitting, eval=FALSE}
+```{r splitting, eval=TRUE}
 library(caret)
 # not sure if we need to split the data for surveys but anyway i will put it here just in case 
 in.train <- createDataPartition(recoded_data$qc19, p = .7, list = F)
@@ -630,7 +630,33 @@ recoded_data |>
 table(recoded_data$sd3, recoded_data$qc19, )
 ```
 
-## 
+## Random forest
+
+```{r rf}
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 5,
+                     classProbs = T,
+                     summaryFunction=twoClassSummary,
+                     verboseIter = T)
+
+# levels(training.data$qc19)=c("No","Yes")
+# levels(testing$Fail)=c("No","Yes")
+
+rfFit <- train(qc19 ~ ., 
+                  data = training.data,
+                  method = "rf",   
+                  preProc=c('scale','center'),
+                  tuneLength = 10,
+                  metric="ROC",
+                  trControl = ctrl)
+plot(rfFit)
+
+rfProb = predict(rfFit, testing.data, type="prob")
+prediction <- as.factor(ifelse(rfProb$Yes > 0.6, "Yes", "No"))
+
+confusionMatrix(prediction, testing.data$qc19)$table
+confusionMatrix(prediction, testing.data$qc19)$overall[1:2]
+```
 
 -   variables used in model - alicia
 
